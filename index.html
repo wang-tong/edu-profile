@@ -222,6 +222,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="share-bar" id="editBar" style="display:none">
   <button class="rec-btn blue" onclick="navTo('pg4')">📝 填写/编辑信息</button>
   <button class="rec-btn outline" onclick="genShareLink()">🔗 生成分享链接</button>
+  <button class="rec-btn outline" id="reportBtn" onclick="openReport()" style="display:none">📄 查看备案表</button>
 </div>
 
 <div class="grid-sect"><div class="grid-container">
@@ -552,6 +553,11 @@ function buildShareURL() {
 function genShareLink() {
   var url = buildShareURL();
   showShareDialog(url);
+}
+
+function openReport() {
+  var url = buildShareURL();
+  window.open('report.html?d=' + url.split('?d=')[1], '_blank');
 }
 
 function showShareDialog(url) {
@@ -1214,6 +1220,9 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
   var hasData = !!(DATA.name && DATA.school);
   if (hasData) {
     initPg1();
+    // 有数据时显示备案表按钮
+    var reportBtn = document.getElementById('reportBtn');
+    if (reportBtn) reportBtn.style.display = '';
   }
 
   // Handle ID param for backward compatibility
