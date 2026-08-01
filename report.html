@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>教育部学历证书电子注册备案表</title>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/edu-profile/sw.js').catch(function(){});
+}
+</script>
 <style>
 :root {
   --blue: #1a5f9b;
@@ -139,16 +144,19 @@ function getUrlParam(key) {
 var data = null;
 var shortId = null;
 
-// 新格式: ?q=ID.压缩数据
+// 新格式: ?q=ID.压缩数据(完整) / ?q=ID(极短离线) / ?q=.数据(纯数据)
 var qParam = getUrlParam('q');
 if (qParam && qParam.length > 4) {
   var dotIdx = qParam.indexOf('.');
   if (dotIdx > 0) {
-    shortId = qParam.substring(0, dotIdx);
+    shortId = qParam.substring(0, dotIdx) || null; // ID可能为空(?.DATA)
     var dataPart = qParam.substring(dotIdx + 1);
     if (dataPart.length > 4) data = decodeData(dataPart);
+  } else if (qParam.length >= 8 && !qParam.match(/[{}[\]]/)) {
+    // ?q=ID — 极短离线链接(无JSON特征),从localStorage读取
+    shortId = qParam;
   } else {
-    // ?q=无点分隔,尝试直接解码
+    // ?q=纯压缩数据,尝试直接解码
     data = decodeData(qParam);
   }
 }
@@ -168,32 +176,14 @@ try {
   if (saved) LOCAL_STORE = JSON.parse(saved);
 } catch(e) {}
 
-// 加载逻辑: 1) localStorage  2) ?d=/?q=DATA  3) Gist API(跨设备回退)
+// 加载逻辑: 优先 ?s=/?q=ID 读取localStorage, 失败则用 ?d=/?q=DATA 回退
 if (shortId) {
   if (LOCAL_STORE[shortId] && LOCAL_STORE[shortId].name) {
     renderReport(LOCAL_STORE[shortId]);
   } else if (data) {
     renderReport(data);
   } else {
-    // 尝试从 GitHub Gist 拉取(跨设备回退)
-    fetch('https://api.github.com/gists/' + encodeURIComponent(shortId), {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    }).then(function(r) {
-      if (!r.ok) throw new Error('Not found');
-      return r.json();
-    }).then(function(gist) {
-      var file = gist.files && gist.files['data.json'];
-      if (file && file.content) {
-        var gistData = JSON.parse(file.content);
-        LOCAL_STORE[shortId] = gistData;
-        try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
-        renderReport(gistData);
-      } else { showError(); }
-    }).catch(function() { showError(); });
-
-    function showError() {
-      document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">请使用原始分享链接打开</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
-    }
+    document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">请使用原始分享链接打开</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
   }
 } else if (data) {
   renderReport(data);

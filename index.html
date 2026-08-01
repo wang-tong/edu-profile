@@ -18,6 +18,12 @@
 <meta name="wechat-enable-text-zoom" content="false">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <title>学信档案</title>
+<script>
+// 注册Service Worker实现离线打开
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/edu-profile/sw.js').catch(function(){});
+}
+</script>
 <style>
 :root{--primary:#09b37d;--primary-dark:#26ae81;--primary-light:#3fc991;--primary-bg:#e8f5e9;--bg:#f5f5f5;--white:#fff;--text:#333;--text-gray:#999;--text-light:#bbb;--red:#f44336;--orange:#f7c044;--blue:#5985ff;--gray:#aaa}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -467,13 +473,20 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <button class="form-submit secondary" style="margin-top:8px;background:#28a745" onclick="openReport()">📄 查看电子注册备案表</button>
 
   <div class="form-preview" id="formPreview">
-    <div class="form-preview-title">📎 分享链接</div>
-    <div class="form-preview-link" id="shareLinkText"></div>
-    <button class="copy-btn" onclick="copyShareLink()">📋 复制链接</button>
+    <div class="form-preview-title">📎 极短离线链接</div>
+    <div class="form-preview-link" id="shortLinkText"></div>
+    <button class="copy-btn" onclick="copyShortLink()">📋 复制</button>
     <span class="copy-ok" id="copyOk">已复制!</span>
+    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 极短 · 仅本设备可打开 · 支持离线</div>
+
+    <div class="form-preview-title" style="margin-top:18px">🔗 完整分享链接</div>
+    <div class="form-preview-link" id="fullLinkText" style="font-size:10px;word-break:break-all"></div>
+    <button class="copy-btn" onclick="copyFullLink()">📋 复制</button>
+    <span class="copy-ok" id="fullCopyOk">已复制!</span>
+    <div style="margin-top:6px;font-size:11px;color:#999">🌐 任意设备可打开 · 数据自包含</div>
+
     <div style="margin-top:10px;font-size:11px;color:#999;line-height:1.6">
-      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可在微信内置浏览器中打开.<br>
-      ⚠️ 如链接过长被截断,请减少填写内容(尤其是图片URL).
+      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可打开.
     </div>
   </div>
 </div>
@@ -596,10 +609,20 @@ function loadDataFromURL() {
 }
 
 function buildShareURL() {
+  // 完整跨设备链接
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
+  saveLocalStore();
   var encoded = encodeData(DATA);
-  // 快速分享: 数据直接放在?q=中(Gist创建需要网络,这里用压缩内嵌)
-  var url = window.location.origin + window.location.pathname + '?q=.' + encoded;
-  return url;
+  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
+}
+
+function getOfflineUrl() {
+  // 极短离线链接:仅需ID,数据在localStorage
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
+  saveLocalStore();
+  return window.location.origin + window.location.pathname + '?q=' + id;
 }
 
 function genShareLink() {
@@ -608,121 +631,78 @@ function genShareLink() {
 
 function openReport() {
   var params = new URLSearchParams(window.location.search);
-  var reportUrl = 'report.html';
-  // 优先 ?q= (新格式), 其次 ?s= (Gist短链接), 再 ?d= (旧格式)
+  // 优先使用新格式 ?q=
   var qParam = params.get('q');
-  var sParam = params.get('s');
-  var dParam = params.get('d');
+  var reportUrl = 'report.html';
   if (qParam) {
     reportUrl += '?q=' + qParam;
-  } else if (sParam) {
-    reportUrl += '?s=' + sParam;
-    if (dParam) reportUrl += '&d=' + dParam;
-  } else if (dParam) {
-    reportUrl += '?d=' + dParam;
+  } else {
+    // 旧格式兼容
+    var sParam = params.get('s');
+    var dParam = params.get('d');
+    if (sParam && dParam) {
+      reportUrl += '?s=' + sParam + '&d=' + dParam;
+    } else if (dParam) {
+      reportUrl += '?d=' + dParam;
+    } else if (sParam) {
+      reportUrl += '?s=' + sParam;
+    }
   }
   window.open(reportUrl, '_blank');
 }
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  getShortUrl().then(function(url) { showShareDialog(url); });
+  var shortUrl = getOfflineUrl();
+  var fullUrl = buildShareURL();
+  showShareDialog(shortUrl, fullUrl);
 }
 
-// 通过 GitHub Gist 存储数据,获取极短链接
-async function createGist(data) {
-  var resp = await fetch('https://api.github.com/gists', {
-    method: 'POST',
-    headers: { 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({
-      public: true,
-      description: 'edu-profile',
-      files: { 'data.json': { content: JSON.stringify(data) } }
-    })
-  });
-  if (!resp.ok) throw new Error('Gist creation failed: ' + resp.status);
-  var gist = await resp.json();
-  return gist.id;
-}
-
-async function getShortUrl() {
-  // 保存到 localStorage
-  var localId = genLocalId(8);
-  LOCAL_STORE[localId] = DATA;
-  saveLocalStore();
-
-  // 优先创建 Gist → 极短链接: /edu-profile/s/GIST_ID
-  try {
-    var gistId = await createGist(DATA);
-    // 用 gistId 替换 localId, 统一用 gistId 作为 key
-    LOCAL_STORE[gistId] = DATA;
-    if (gistId !== localId) delete LOCAL_STORE[localId];
-    saveLocalStore();
-    return window.location.origin + '/edu-profile/s/' + gistId;
-  } catch(e) {
-    console.log('[app] Gist创建失败,回退到?q=格式:', e.message);
-    // 回退: 数据压缩在URL中(兼容)
-    var encoded = encodeData(DATA);
-    return window.location.origin + window.location.pathname + '?q=' + localId + '.' + encoded;
-  }
-}
-
-function showShareDialog(url) {
+function showShareDialog(shortUrl, fullUrl) {
   var preview = document.getElementById('formPreview');
-  document.getElementById('shareLinkText').textContent = url;
+  document.getElementById('shortLinkText').textContent = shortUrl;
+  document.getElementById('fullLinkText').textContent = fullUrl;
   preview.classList.add('show');
-  // Also scroll to the share section on pg4, or show it wherever
-  // On pg1, navigate to pg4
   if (currentPage !== 'pg4') {
     navTo('pg4');
-    // Populate form from DATA first
     populateForm();
   }
   setTimeout(function() {
-    // Scroll the preview into view
     var preview = document.getElementById('formPreview');
     if (preview) preview.scrollIntoView({behavior:'smooth'});
   }, 300);
 }
 
-function copyShareLink() {
-  var text = document.getElementById('shareLinkText').textContent;
-  // 微信和移动端优先用 textarea fallback(兼容性最好)
+function _doCopy(text, okId) {
   var ta = document.createElement('textarea');
   ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.left = '0';
-  ta.style.top = '0';
-  ta.style.width = '1px';
-  ta.style.height = '1px';
-  ta.style.opacity = '0';
-  ta.style.pointerEvents = 'none';
+  ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
   document.body.appendChild(ta);
-  // 移动端需要让 textarea 可被用户选中
-  ta.focus();
-  ta.select();
-  ta.setSelectionRange(0, 99999); // 移动端兼容
+  ta.focus(); ta.select();
+  ta.setSelectionRange(0, 99999);
   var copied = false;
-  try {
-    copied = document.execCommand('copy');
-  } catch(e) {}
+  try { copied = document.execCommand('copy'); } catch(e) {}
   document.body.removeChild(ta);
   if (copied) {
-    showCopyOk();
+    _showCopyOk(okId);
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ _showCopyOk(okId); }).catch(function() {
+      toast('请长按链接手动复制');
+    });
   } else {
-    // 剪贴板 API 兜底(仅在 HTTPS 环境生效)
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(showCopyOk).catch(function() {
-        toast('请长按上方链接手动复制');
-      });
-    } else {
-      toast('请长按上方链接手动复制');
-    }
+    toast('请长按链接手动复制');
   }
 }
 
-function showCopyOk() {
-  var el = document.getElementById('copyOk');
+function copyShortLink() {
+  _doCopy(document.getElementById('shortLinkText').textContent, 'copyOk');
+}
+function copyFullLink() {
+  _doCopy(document.getElementById('fullLinkText').textContent, 'fullCopyOk');
+}
+
+function _showCopyOk(id) {
+  var el = document.getElementById(id);
   el.style.display = 'inline';
   setTimeout(function() { el.style.display = 'none'; }, 2000);
 }
@@ -833,7 +813,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!(params.get('q') || params.get('s') || params.get('d'));
+  return !!(params.get('q') || params.get('d') || params.get('s'));
 }
 
 // ========== INIT PG2 ==========
@@ -1280,24 +1260,31 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  getShortUrl().then(function(url) {
-    var preview = document.getElementById('formPreview');
-    document.getElementById('shareLinkText').textContent = url;
-    preview.classList.add('show');
-    preview.scrollIntoView({behavior: 'smooth'});
-    try { window.history.replaceState({}, '', url); } catch(e) {}
-    toast('信息已保存,短链接已生成!');
-  });
+  var offlineUrl = getOfflineUrl();
+  var fullUrl = buildShareURL();
+
+  // Show both links
+  showShareDialog(offlineUrl, fullUrl);
+
+  // Update current URL without reload
+  try {
+    window.history.replaceState({}, '', offlineUrl);
+  } catch(e) {}
+
+  toast('信息已保存,离线短链接已生成!');
 }
 
 function submitAndPreview() {
   DATA = collectFormData();
-  getShortUrl().then(function(url) {
-    try { window.history.replaceState({}, '', url); } catch(e) {}
-    backTo('pg1');
-    setTimeout(function() { navTo('pg2'); }, 100);
-    toast('请查看高等教育信息页预览效果');
-  });
+
+  var offlineUrl = getOfflineUrl();
+  try {
+    window.history.replaceState({}, '', offlineUrl);
+  } catch(e) {}
+
+  backTo('pg1');
+  setTimeout(function() { navTo('pg2'); }, 100);
+  toast('请查看高等教育信息页预览效果');
 }
 
 // ========== PG1 TABBAR ==========
@@ -1318,11 +1305,15 @@ function loadFromShortCode(id) {
 // ========== INIT ==========
 (function() {
   var params = new URLSearchParams(window.location.search);
-  // 优先新格式 ?q=ID.DATA, 兼容旧格式 ?s=
+  // 优先新格式 ?q=ID.DATA(跨设备) / ?q=ID(极短离线), 兼容旧格式 ?s=
   var shortId = null;
   var qParam = params.get('q');
   if (qParam && qParam.indexOf('.') > 0) {
+    // ?q=ID.DATA — 含跨设备数据的完整链接
     shortId = qParam.substring(0, qParam.indexOf('.'));
+  } else if (qParam && qParam.length >= 8 && !qParam.match(/[{}[\]]/)) {
+    // ?q=ID — 极短离线链接(仅ID,无JSON特征)
+    shortId = qParam;
   }
   if (!shortId) shortId = params.get('s');
 
@@ -1363,47 +1354,27 @@ function loadFromShortCode(id) {
   }
 
   if (shortId) {
-    // 短链接: localStorage → ?d=回退 → Gist API(跨设备回退)
+    // 短链接: 先尝试 localStorage, 失败则用 ?d= 回退
     console.log('[app] 检测到短链接,正在加载...');
     loadFromShortCode(shortId).then(function(loaded) {
       if (loaded && loaded.name) {
         DATA = loaded;
         console.log('[app] 短链接数据加载成功(本设备)');
-        runInit();
       } else {
-        // localStorage 无数据, 尝试 URL 中的 ?q=/?d= 回退
+        // localStorage 无数据, 尝试 URL 中的 ?d= 回退
         var fallback = loadDataFromURL();
         if (fallback) {
           DATA = fallback;
+          // 顺便存回 localStorage
           LOCAL_STORE[shortId] = fallback;
           saveLocalStore();
-          console.log('[app] 从URL回退加载成功');
-          runInit();
+          console.log('[app] 从 ?d= 回退加载成功');
         } else {
-          // 尝试 GitHub Gist API (跨设备回退)
-          console.log('[app] 尝试从Gist加载...');
-          fetch('https://api.github.com/gists/' + encodeURIComponent(shortId), {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          }).then(function(r) { return r.json(); })
-            .then(function(gist) {
-              var file = gist.files && gist.files['data.json'];
-              if (file && file.content) {
-                DATA = JSON.parse(file.content);
-                LOCAL_STORE[shortId] = DATA;
-                saveLocalStore();
-                console.log('[app] 从Gist加载成功(跨设备)');
-              } else {
-                console.log('[app] 数据加载失败');
-                toast('链接已失效或不存在');
-              }
-              runInit();
-            }).catch(function() {
-              console.log('[app] Gist加载失败');
-              toast('链接已失效或不存在');
-              runInit();
-            });
+          console.log('[app] 数据加载失败: localStorage和URL均无数据');
+          toast('链接已失效或不存在');
         }
       }
+      runInit();
     });
   } else {
     // 没有 ?s=,尝试从 ?d= 或 hash 加载
