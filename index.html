@@ -17,7 +17,6 @@
 <!-- URL Scheme 防止微信对短链做额外跳转校验 -->
 <meta name="wechat-enable-text-zoom" content="false">
 <title>学信档案</title>
-<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
 :root{--primary:#09b37d;--primary-dark:#26ae81;--primary-light:#3fc991;--primary-bg:#e8f5e9;--bg:#f5f5f5;--white:#fff;--text:#333;--text-gray:#999;--text-light:#bbb;--red:#f44336;--orange:#f7c044;--blue:#5985ff;--gray:#aaa}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -511,24 +510,12 @@ var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 // ========== URL DATA ENCODING ==========
 function encodeData(obj) {
   var json = JSON.stringify(obj);
-  // 用 LZString 压缩，对含图片 base64 的数据可缩短 40-70%
-  if (typeof LZString !== 'undefined') {
-    var compressed = LZString.compressToEncodedURIComponent(json);
-    if (compressed) return compressed;
-  }
-  // fallback: 旧 base64url 方式
   var encoded = btoa(unescape(encodeURIComponent(json)));
   return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function decodeData(str) {
   try {
-    // 新格式：先尝试 LZString 解码
-    if (typeof LZString !== 'undefined') {
-      var json = LZString.decompressFromEncodedURIComponent(str);
-      if (json) return JSON.parse(json);
-    }
-    // 回退旧格式：base64url（兼容旧链接）
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (str.length % 4) str += '=';
     var json = decodeURIComponent(escape(atob(str)));
