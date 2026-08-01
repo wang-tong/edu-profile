@@ -215,7 +215,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
 <div class="rec-card" onclick="toast('功能开发中,敬请期待')"><div class="rec-icon-wrap"><svg width="24" height="24" viewBox="0 0 1024 1024" fill="#fff"><path d="M819.2 143.018667L753.493333 102.4l-81.92 49.152L573.013333 102.4 491.52 151.552 409.941333 102.4l-81.92 49.152L246.613333 102.4 204.8 133.973333V785.066667l41.813333 30.72 81.92-49.152L409.941333 819.2l81.578667-49.152L573.013333 819.2l81.578667-51.2L736.426667 819.2l81.578666-49.152L819.2 785.066667z"/><path d="M368.64 409.6h286.72v40.96H368.64zM368.64 512h286.72v40.96H368.64zM368.64 614.4h163.84v40.96H368.64z" fill="#09b37d"/></svg></div><div class="rec-info"><div class="rec-title">合作意识测试</div></div><button class="rec-btn">去测评</button></div>
 
-<div class="share-bar" id="editBar">
+<div class="share-bar" id="editBar" style="display:none">
   <button class="rec-btn blue" onclick="navTo('pg4')">📝 填写/编辑信息</button>
   <button class="rec-btn outline" onclick="genShareLink()">🔗 生成分享链接</button>
 </div>
@@ -645,10 +645,10 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
-  // 通过分享链接打开时,只隐藏编辑按钮,其他功能正常使用
-  if (isFromShareLink()) {
+  // 非分享链接才显示编辑按钮，分享链接始终隐藏
+  if (!isFromShareLink()) {
     var editBar = document.getElementById('editBar');
-    if (editBar) editBar.style.display = 'none';
+    if (editBar) editBar.style.display = 'flex';
   }
 }
 
