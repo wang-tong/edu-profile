@@ -11,7 +11,7 @@
 <meta name="x5-page-mode" content="app">
 <!-- 微信分享卡片 -->
 <meta property="og:title" content="学信档案">
-<meta property="og:description" content="查看学籍、学历、学位信息（支持研究生）">
+<meta property="og:description" content="查看学籍、学历、学位信息(支持研究生)">
 <meta property="og:type" content="website">
 <meta property="og:image" content="">
 <!-- URL Scheme 防止微信对短链做额外跳转校验 -->
@@ -215,7 +215,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
 <div class="rec-card" onclick="toast('功能开发中,敬请期待')"><div class="rec-icon-wrap"><svg width="24" height="24" viewBox="0 0 1024 1024" fill="#fff"><path d="M819.2 143.018667L753.493333 102.4l-81.92 49.152L573.013333 102.4 491.52 151.552 409.941333 102.4l-81.92 49.152L246.613333 102.4 204.8 133.973333V785.066667l41.813333 30.72 81.92-49.152L409.941333 819.2l81.578667-49.152L573.013333 819.2l81.578667-51.2L736.426667 819.2l81.578666-49.152L819.2 785.066667z"/><path d="M368.64 409.6h286.72v40.96H368.64zM368.64 512h286.72v40.96H368.64zM368.64 614.4h163.84v40.96H368.64z" fill="#09b37d"/></svg></div><div class="rec-info"><div class="rec-title">合作意识测试</div></div><button class="rec-btn">去测评</button></div>
 
-<div class="share-bar">
+<div class="share-bar" id="editBar">
   <button class="rec-btn blue" onclick="navTo('pg4')">📝 填写/编辑信息</button>
   <button class="rec-btn outline" onclick="genShareLink()">🔗 生成分享链接</button>
 </div>
@@ -434,8 +434,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
     <button class="copy-btn" onclick="copyShareLink()">📋 复制链接</button>
     <span class="copy-ok" id="copyOk">已复制!</span>
     <div style="margin-top:10px;font-size:11px;color:#999;line-height:1.6">
-      💡 <b>微信打开方法：</b>复制链接后，在微信聊天框中粘贴发送，直接点击即可在微信内置浏览器中打开。<br>
-      ⚠️ 如链接过长被截断，请减少填写内容（尤其是图片URL）。
+      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可在微信内置浏览器中打开.<br>
+      ⚠️ 如链接过长被截断,请减少填写内容(尤其是图片URL).
     </div>
   </div>
 </div>
@@ -541,7 +541,7 @@ function showShareDialog(url) {
 
 function copyShareLink() {
   var text = document.getElementById('shareLinkText').textContent;
-  // 微信和移动端优先用 textarea fallback（兼容性最好）
+  // 微信和移动端优先用 textarea fallback(兼容性最好)
   var ta = document.createElement('textarea');
   ta.value = text;
   ta.style.position = 'fixed';
@@ -564,7 +564,7 @@ function copyShareLink() {
   if (copied) {
     showCopyOk();
   } else {
-    // 剪贴板 API 兜底（仅在 HTTPS 环境生效）
+    // 剪贴板 API 兜底(仅在 HTTPS 环境生效)
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(showCopyOk).catch(function() {
         toast('请长按上方链接手动复制');
@@ -638,7 +638,6 @@ function formatDate(dateStr) {
 
 // ========== INIT PG1 ==========
 function initPg1() {
-  // Update the rec-card to show current name if data loaded
   var hasData = !!(DATA.name && DATA.school);
   if (hasData) {
     var recTitle = document.querySelector('.rec-title');
@@ -646,6 +645,19 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
+  // 通过分享链接打开时，隐藏编辑按钮，自动跳转到信息页
+  if (isFromShareLink()) {
+    var editBar = document.getElementById('editBar');
+    if (editBar) editBar.style.display = 'none';
+    if (hasData) {
+      setTimeout(function() { navTo('pg2'); }, 200);
+    }
+  }
+}
+
+function isFromShareLink() {
+  var params = new URLSearchParams(window.location.search);
+  return !!params.get('d');
 }
 
 // ========== INIT PG2 ==========
@@ -1080,9 +1092,9 @@ function submitForm() {
     window.history.replaceState({}, '', newUrl);
   } catch(e) {}
 
-  // 链接长度检查（微信内置浏览器建议控制在6000字符以内）
+  // 链接长度检查(微信内置浏览器建议控制在6000字符以内)
   if (url.length > 6000) {
-    toast('⚠️ 链接较长(' + url.length + '字符)，微信可能截断，建议少填图片URL');
+    toast('⚠️ 链接较长(' + url.length + '字符),微信可能截断,建议少填图片URL');
   } else {
     toast('信息已保存,链接已生成!');
   }
