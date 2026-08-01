@@ -254,9 +254,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
 <div class="sat-card"><div class="sat-left"><div class="sat-header"><span class="sat-title">院校满意度</span><span class="sat-badge" onclick="toast('投票功能')">投票</span></div><span class="sat-desc">本校的生活条件、环境及综合情况</span></div><div class="sat-right"><span class="sat-tag" onclick="toast('综合情况')">综合情况</span><span class="sat-tag" onclick="toast('生活条件')">生活条件</span><span class="sat-tag" onclick="toast('校园环境')">校园环境</span></div></div>
 
-<!-- 本科教育 -->
 <div class="edu-block" id="undergradBlock">
-<div class="edu-block-header"><span class="edu-block-title">本科教育</span></div>
+<div class="edu-block-header"><span class="edu-block-title" id="ugBlockTitle">本科教育</span></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count" id="ugXjCount">(1)</span><div class="sect-action"><span class="sect-action-text">还有学籍没有显示出来?</span><span class="sect-action-link" onclick="toast('尝试绑定学籍')">尝试绑定</span></div></div>
 <div class="info-card" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
@@ -285,7 +284,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 </div></nav><div class="nb-ph" id="nbPh3"></div>
 
 <div class="level-tabs" id="levelTabs">
-  <div class="level-tab active" data-idx="0">本科</div>
+  <div class="level-tab active" data-idx="0" id="ugLevelTab">本科</div>
   <div class="level-tab" data-idx="1" id="gradTab" style="display:none">硕士</div>
 </div>
 
@@ -731,6 +730,13 @@ function initPg2() {
   var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
 
   // Undergraduate cards
+  var degLabel = d.academic_qualification || '本科';
+  var eduTitle = (degLabel === '专科') ? '专科教育' : '本科教育';
+  var shortLabel = (degLabel === '专科') ? '专科' : '本科';
+  document.getElementById('ugBlockTitle').textContent = eduTitle;
+  var ugTab = document.getElementById('ugLevelTab');
+  if (ugTab) ugTab.textContent = shortLabel;
+
   if (hasUndergrad) {
     document.getElementById('xjSchool').textContent = d.school;
     document.getElementById('xjDegree').textContent = d.academic_qualification;
@@ -750,7 +756,7 @@ function initPg2() {
     document.getElementById('xlDegree').textContent = '--';
     document.getElementById('xlMajor').textContent = '--';
     document.getElementById('xlType').textContent = '--';
-    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">请先填写本科信息</span><span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>';
+    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">请先填写' + shortLabel + '信息</span><span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>';
   }
 
   // Graduate cards
