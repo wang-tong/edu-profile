@@ -1,5 +1,5 @@
 // Service Worker — 缓存页面实现离线打开
-var CACHE = 'edu-v2';
+var CACHE = 'edu-v3';
 
 var FILES = [
   '/edu-profile/',
