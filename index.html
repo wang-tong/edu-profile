@@ -258,11 +258,9 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="edu-block" id="undergradBlock">
 <div class="edu-block-header"><span class="edu-block-title" id="ugBlockTitle">本科教育</span></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count" id="ugXjCount">(1)</span><div class="sect-action"><span class="sect-action-text">还有学籍没有显示出来?</span><span class="sect-action-link" onclick="toast('尝试绑定学籍')">尝试绑定</span></div></div>
-<div class="info-card" id="ugXjCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div>
-<div class="empty-card" id="ugXjEmpty" style="display:none"><span class="empty-text">暂无学籍信息</span></div></div>
+<div class="info-card" id="ugXjCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
-<div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div>
-<div class="empty-card" id="ugXlEmpty" style="display:none"><span class="empty-text">暂无学历信息</span></div></div>
+<div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
 <div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
@@ -757,21 +755,17 @@ function initPg2() {
     document.getElementById('xlDegree').textContent = d.academic_qualification;
     document.getElementById('xlMajor').textContent = d.major;
     document.getElementById('xlType').textContent = d.xltype;
-    // Show cards, hide empty states
-    document.getElementById('ugXjCard').style.display = '';
-    document.getElementById('ugXlCard').style.display = '';
-    document.getElementById('ugXjEmpty').style.display = 'none';
-    document.getElementById('ugXlEmpty').style.display = 'none';
   } else {
-    // Hide cards, show empty states
-    document.getElementById('ugXjCard').style.display = 'none';
-    document.getElementById('ugXlCard').style.display = 'none';
-    document.getElementById('ugXjEmpty').style.display = '';
-    document.getElementById('ugXlEmpty').style.display = '';
-    document.getElementById('ugXjEmpty').querySelector('.empty-text').textContent = '暂无' + shortLabel + '学籍信息';
-    document.getElementById('ugXlEmpty').querySelector('.empty-text').textContent = '暂无' + shortLabel + '学历信息';
+    document.getElementById('xjSchool').textContent = '--';
+    document.getElementById('xjDegree').textContent = '--';
+    document.getElementById('xjMajor').textContent = '--';
+    document.getElementById('xjType').textContent = '--';
+    document.getElementById('xlSchool').textContent = '--';
+    document.getElementById('xlDegree').textContent = '--';
+    document.getElementById('xlMajor').textContent = '--';
+    document.getElementById('xlType').textContent = '--';
   }
-  // 学位信息始终显示"暂无学位信息"（不显示"去填写"链接）
+  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
   document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
 
   // Graduate cards
