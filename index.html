@@ -952,25 +952,8 @@ function initPg2() {
     if (gradTab2) gradTab2.style.display = 'none';
   }
 
-  // 照片显示
-  var imgA = d.image_a || '';
-  var imgB = d.image_b || '';
-  if (imgA) {
-    document.getElementById('admImg').src = imgA;
-    document.getElementById('admImg').style.display = 'block';
-    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = 'none';
-  } else {
-    document.getElementById('admImg').style.display = 'none';
-    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = '';
-  }
-  if (imgB) {
-    document.getElementById('degImg').src = imgB;
-    document.getElementById('degImg').style.display = 'block';
-    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = 'none';
-  } else {
-    document.getElementById('degImg').style.display = 'none';
-    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = '';
-  }
+  // 照片显示(仅在pg3存在,pg2无此元素)
+  // pg2不包含admPhotoBox/degPhotoBox,此代码仅用于将来的pg2扩展
 }
 
 // ========== INIT PG3 ==========
@@ -983,6 +966,7 @@ function navToDetail(level) {
 
 function initPg3() {
   var d = DATA;
+  console.log('[PG3入口] DATA存在='+!!d+' image_a长度='+(d&&d.image_a?d.image_a.length:0)+' image_b长度='+(d&&d.image_b?d.image_b.length:0)+' detailLevel='+detailLevel);
   var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
 
   // Level tabs
@@ -1120,21 +1104,29 @@ function initPg3() {
   document.getElementById('rowTrainMode').style.display = showGrad ? '' : 'none';
 
   // Photos
-  if (imgA) {
+  console.log('[PG3-照片调试] imgA长度='+(imgA||'').length+' imgB长度='+(imgB||'').length);
+  var admBox = document.getElementById('admPhotoBox');
+  var degBox = document.getElementById('degPhotoBox');
+  console.log('[PG3-照片调试] admBox存在='+!!admBox+' degBox存在='+!!degBox);
+  if (imgA && admBox) {
     document.getElementById('admImg').src = imgA;
     document.getElementById('admImg').style.display = 'block';
-    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = 'none';
-  } else {
+    var ph2a = admBox.querySelector('.photo-ph2');
+    if (ph2a) { ph2a.style.display = 'none'; console.log('[PG3-照片调试] adm占位符已隐藏'); }
+  } else if (admBox) {
     document.getElementById('admImg').style.display = 'none';
-    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = '';
+    var ph2a = admBox.querySelector('.photo-ph2');
+    if (ph2a) ph2a.style.display = '';
   }
-  if (imgB) {
+  if (imgB && degBox) {
     document.getElementById('degImg').src = imgB;
     document.getElementById('degImg').style.display = 'block';
-    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = 'none';
-  } else {
+    var ph2b = degBox.querySelector('.photo-ph2');
+    if (ph2b) { ph2b.style.display = 'none'; console.log('[PG3-照片调试] deg占位符已隐藏'); }
+  } else if (degBox) {
     document.getElementById('degImg').style.display = 'none';
-    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = '';
+    var ph2b = degBox.querySelector('.photo-ph2');
+    if (ph2b) ph2b.style.display = '';
   }
 }
 
@@ -1357,6 +1349,7 @@ function submitForm() {
 
 function submitAndPreview() {
   DATA = collectFormData();
+  console.log('[预览] 表单已收集, image_a长度='+(DATA.image_a||'').length+' image_b长度='+(DATA.image_b||'').length);
 
   var offlineUrl = getOfflineUrl();
   try {

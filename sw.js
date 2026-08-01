@@ -1,5 +1,5 @@
 // Service Worker — 缓存页面实现离线打开
-var CACHE = 'edu-v3';
+var CACHE = 'edu-v4';
 
 var FILES = [
   '/edu-profile/',
@@ -35,20 +35,17 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(function(cached) {
-      // 缓存命中直接用,否则联网获取并缓存
-      var fetched = fetch(e.request).then(function(resp) {
+      // 网络优先: 先尝试网络,失败后回退缓存(离线可用)
+      return fetch(e.request).then(function(resp) {
         if (resp && resp.status === 200) {
-          var clone = resp.clone();
           caches.open(CACHE).then(function(c) {
-            c.put(e.request, clone);
+            c.put(e.request, resp.clone());
           });
         }
         return resp;
       }).catch(function() {
-        // 离线且无缓存时返回缓存备用
         return cached;
       });
-      return cached || fetched;
     })
   );
 });
