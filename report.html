@@ -135,7 +135,7 @@ function getUrlParam(key) {
   return m ? decodeURIComponent(m[1]) : '';
 }
 
-// Load data from URL (supports ?s= short link and ?d= fallback)
+// Load data from URL (supports ?s= short link, API, and ?d= fallback)
 var encoded = getUrlParam('d');
 var data = encoded ? decodeData(encoded) : null;
 
@@ -150,16 +150,41 @@ try {
   if (saved) LOCAL_STORE = JSON.parse(saved);
 } catch(e) {}
 
-// Check ?s= short link first
+function saveLocalStore() {
+  try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
+}
+
+// Netlify API 获取数据(跨设备)
+function apiStoreGet(id) {
+  return fetch('/api/store?id=' + encodeURIComponent(id))
+    .then(function(r) { if (!r.ok) throw new Error('API get failed'); return r.json(); });
+}
+
 var shortId = getUrlParam('s');
+var noDataHtml = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+
 if (shortId) {
+  // 1. 先查 localStorage
   if (LOCAL_STORE[shortId] && LOCAL_STORE[shortId].name) {
     renderReport(LOCAL_STORE[shortId]);
-  } else if (data) {
-    // 短码在本设备不存在,回退到 ?d= 数据
-    renderReport(data);
   } else {
-    document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">短链接仅在同一设备有效，请使用完整分享链接</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+    // 2. 尝试 Netlify API 加载
+    apiStoreGet(shortId).then(function(apiData) {
+      if (apiData && apiData.name) {
+        LOCAL_STORE[shortId] = apiData;
+        saveLocalStore();
+        renderReport(apiData);
+      } else {
+        throw new Error('API no data');
+      }
+    }).catch(function() {
+      // 3. 回退到 ?d= 参数
+      if (data) {
+        renderReport(data);
+      } else {
+        document.getElementById('reportContainer').innerHTML = noDataHtml;
+      }
+    });
   }
 } else if (data) {
   renderReport(data);

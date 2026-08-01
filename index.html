@@ -590,36 +590,46 @@ function genShareLink() {
 }
 
 function openReport() {
-  // 备案表: 同时传 s= 和 d= (s=本设备优先, d=跨设备回退)
+  // 备案表: 优先 ?s= (短链接,可通过API跨设备)
   var params = new URLSearchParams(window.location.search);
   var sParam = params.get('s');
   var dParam = params.get('d');
   var reportUrl = 'report.html';
-  if (sParam && dParam) {
-    reportUrl += '?s=' + sParam + '&d=' + dParam;
+  if (sParam) {
+    reportUrl += '?s=' + sParam;
+    if (dParam) reportUrl += '&d=' + dParam;
   } else if (dParam) {
     reportUrl += '?d=' + dParam;
-  } else if (sParam) {
-    reportUrl += '?s=' + sParam;
   }
   window.open(reportUrl, '_blank');
 }
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  var url = getShortUrl();
-  showShareDialog(url);
+  toast('正在生成分享链接...');
+  getShortUrl(function(url) {
+    showShareDialog(url);
+  });
 }
 
-function getShortUrl() {
-  // 纯前端方案: s=短码(本设备localStorage) + d=完整压缩数据(跨设备回退,含图片)
-  var id = genLocalId(8);
-  LOCAL_STORE[id] = DATA;
+function getShortUrl(callback) {
+  var localId = genLocalId(8);
+  LOCAL_STORE[localId] = DATA;
   saveLocalStore();
 
-  // ?d= 参数使用 LZString 压缩,可携带图片,URL大幅缩短
-  var encoded = encodeData(DATA);
-  return window.location.origin + window.location.pathname + '?s=' + id + '&d=' + encoded;
+  var baseUrl = window.location.origin + window.location.pathname;
+
+  // 尝试上传到Netlify Blobs → 极简链接 ?s=8位短码
+  apiStorePut(DATA).then(function(result) {
+    var id = result.id;
+    LOCAL_STORE[id] = DATA;
+    saveLocalStore();
+    callback(baseUrl + '?s=' + id);
+  }).catch(function() {
+    // API不可用,回退到 ?s=XXXX&d=压缩数据
+    var encoded = encodeData(DATA);
+    callback(baseUrl + '?s=' + localId + '&d=' + encoded);
+  });
 }
 
 function showShareDialog(url) {
@@ -1274,9 +1284,41 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
   });
 });
 
+// ========== API STORE (Netlify Blobs) ==========
+function apiStorePut(data) {
+  return fetch('/api/store', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({data: data})
+  }).then(function(r) {
+    if (!r.ok) throw new Error('API store failed');
+    return r.json();
+  });
+}
+
+function apiStoreGet(id) {
+  return fetch('/api/store?id=' + encodeURIComponent(id))
+    .then(function(r) {
+      if (!r.ok) throw new Error('API get failed');
+      return r.json();
+    });
+}
+
 function loadFromShortCode(id) {
-  // 纯前端方案: 直接从 localStorage 读取
-  return Promise.resolve(LOCAL_STORE[id] || null);
+  // 1. 优先: localStorage (本设备)
+  if (LOCAL_STORE[id]) return Promise.resolve(LOCAL_STORE[id]);
+
+  // 2. Netlify API (跨设备)
+  return apiStoreGet(id).then(function(data) {
+    if (data && data.name) {
+      LOCAL_STORE[id] = data;
+      saveLocalStore();
+      return data;
+    }
+    return null;
+  }).catch(function() {
+    return null; // API不可用,让调用方走?d=回退
+  });
 }
 
 // ========== INIT ==========
