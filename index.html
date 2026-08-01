@@ -645,13 +645,10 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
-  // 通过分享链接打开时，隐藏编辑按钮，自动跳转到信息页
+  // 通过分享链接打开时，隐藏编辑按钮，首页保持可见
   if (isFromShareLink()) {
     var editBar = document.getElementById('editBar');
     if (editBar) editBar.style.display = 'none';
-    if (hasData) {
-      setTimeout(function() { navTo('pg2'); }, 200);
-    }
   }
 }
 
