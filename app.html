@@ -1312,7 +1312,7 @@ function loadFromShortCode(id) {
   }
 
   if (shortId) {
-    // 短链接：异步加载
+    // 短链接:异步加载
     console.log('[app] 检测到短链接,正在加载...');
     loadFromShortCode(shortId).then(function(loaded) {
       if (loaded && loaded.name) {

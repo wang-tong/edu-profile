@@ -251,10 +251,10 @@ function renderReport(d) {
   html += '<td class="label">学历层次</td><td class="value">';
   html += ugLevel;
   html += '</td>';
-  html += '<td class="label">学习形式</td><td class="value" colspan="3">' + safeVal(d.form || d.xltype) + '</td>';
+  html += '<td class="label">学习形式</td><td class="value" colspan="3">' + safeVal(d.xltype) + '</td>';
   html += '</tr><tr>';
-  html += '<td class="label">入学时间</td><td class="value">' + safeVal(d.entrance_date) + '</td>';
-  html += '<td class="label">毕业时间</td><td class="value" colspan="3">' + safeVal(d.graduate_date) + '</td>';
+  html += '<td class="label">入学时间</td><td class="value">' + dateStr(d.ru_nian,d.ru_yue,d.ru_ri) + '</td>';
+  html += '<td class="label">毕业时间</td><td class="value" colspan="3">' + dateStr(d.li_nian,d.li_yue,d.li_ri) + '</td>';
   html += '</tr><tr>';
   html += '<td class="label">学制</td><td class="value">' + safeVal(d.educational_system) + '</td>';
   html += '<td class="label">学籍状态</td><td class="value" colspan="3">';
@@ -281,8 +281,8 @@ function renderReport(d) {
   html += '<tr><td class="label">专业名称</td><td class="value">' + safeVal(d.major) + '</td>';
   html += '<td class="label">层次</td><td class="value">' + ugLevel + '</td></tr>';
   html += '<tr><td class="label">院系</td><td class="value">' + safeVal(d.fenyuan) + '</td>';
-  html += '<td class="label">学号</td><td class="value">' + safeVal(d.student_id) + '</td></tr>';
-  html += '<tr><td class="label">学习形式</td><td class="value">' + safeVal(d.form || d.xltype) + '</td>';
+  html += '<td class="label">学号</td><td class="value">' + safeVal(d.xuehao) + '</td></tr>';
+  html += '<tr><td class="label">学习形式</td><td class="value">' + safeVal(d.xltype) + '</td>';
   html += '<td class="label">培养方式</td><td class="value">' + safeVal(d.grad_category) + '</td></tr>';
   html += '<tr><td class="label">学校类型</td><td class="value">' + safeVal(d.school_type) + '</td>';
   html += '<td class="label">毕业生类别</td><td class="value">' + safeVal(d.xllb) + '</td></tr>';
@@ -337,8 +337,8 @@ function renderReport(d) {
     html += '</td>';
     html += '<td class="label">学位类型</td><td class="value">' + safeVal(d.grad_degree_type) + '</td>';
     html += '</tr><tr>';
-    html += '<td class="label">入学时间</td><td class="value">' + safeVal(d.grad_entrance_date) + '</td>';
-    html += '<td class="label">毕业时间</td><td class="value" colspan="3">' + safeVal(d.grad_graduate_date) + '</td>';
+    html += '<td class="label">入学时间</td><td class="value">' + dateStr(d.grad_ru_nian,d.grad_ru_yue,d.grad_ru_ri) + '</td>';
+    html += '<td class="label">毕业时间</td><td class="value" colspan="3">' + dateStr(d.grad_li_nian,d.grad_li_yue,d.grad_li_ri) + '</td>';
     html += '</tr><tr>';
     html += '<td class="label">学制</td><td class="value">' + safeVal(d.grad_educational_system) + '</td>';
     html += '<td class="label">学籍状态</td><td class="value" colspan="3">';
@@ -363,8 +363,8 @@ function renderReport(d) {
     html += '<tr><td class="label">专业名称</td><td class="value">' + safeVal(d.grad_major) + '</td>';
     html += '<td class="label">层次</td><td class="value">' + safeVal(d.grad_academic_qualification) + '</td></tr>';
     html += '<tr><td class="label">院系</td><td class="value">' + safeVal(d.grad_fenyuan) + '</td>';
-    html += '<td class="label">学号</td><td class="value">' + safeVal(d.grad_student_id) + '</td></tr>';
-    html += '<tr><td class="label">学习形式</td><td class="value">' + safeVal(d.grad_xltype || d.grad_form) + '</td>';
+    html += '<td class="label">学号</td><td class="value">' + safeVal(d.grad_xuehao) + '</td></tr>';
+    html += '<tr><td class="label">学习形式</td><td class="value">' + safeVal(d.grad_train_mode) + '</td>';
     html += '<td class="label">培养方式</td><td class="value">' + safeVal(d.grad_grad_category) + '</td></tr>';
     html += '<tr><td class="label">学校类型</td><td class="value">' + safeVal(d.grad_school_type) + '</td>';
     html += '<td class="label">毕业生类别</td><td class="value">' + safeVal(d.grad_xllb) + '</td></tr>';
