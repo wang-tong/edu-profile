@@ -918,7 +918,7 @@ function handleImgUpload(inputEl, targetId) {
         raw = canvas.toDataURL('image/jpeg', 0.2);
         fmt = 'j';
       }
-      // 剥离 data:image/xxx;base64, 前缀，只保留格式标记+净数据
+      // 剥离 data:image/xxx;base64, 前缀,只保留格式标记+净数据
       raw = raw.replace(/^data:image\/\w+;base64,/, '');
       target.value = fmt + ':' + raw;
       target.style.color = '#09b37d';
