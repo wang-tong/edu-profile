@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>教育部学历证书电子注册备案表</title>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
 :root {
   --blue: #1a5f9b;
@@ -103,124 +104,26 @@ body{font-family:"SimSun","宋体",serif;background:var(--bg);min-height:100vh;c
 <div class="toolbar">
   <button class="btn-print" onclick="window.print()">🖨️ 打印备案表</button>
   <a class="btn-back" href="index.html">← 返回首页</a>
-  <span class="hint">如需截屏，请直接滚动截取下方完整页面</span>
+  <span class="hint">如需截屏,请直接滚动截取下方完整页面</span>
 </div>
 
 <div id="reportContainer"></div>
 
 <script>
-// ========== LZW COMPRESSION on UTF-8 bytes ==========
-var LZUTF8 = (function() {
-  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~";
-  var R64 = {}; for (var i = 0; i < B64.length; i++) R64[B64[i]] = i;
-
-  function utf8ToStr(bytes) {
-    var s = '';
-    for (var i = 0; i < bytes.length; i++) {
-      var b = bytes[i];
-      var cp, n;
-      if (b < 0x80) { cp = b; n = 0; }
-      else if ((b & 0xE0) === 0xC0) { cp = (b & 0x1F) << 6 | (bytes[i+1] & 0x3F); n = 1; }
-      else if ((b & 0xF0) === 0xE0) { cp = (b & 0x0F) << 12 | (bytes[i+1] & 0x3F) << 6 | (bytes[i+2] & 0x3F); n = 2; }
-      else { cp = (b & 0x07) << 18 | (bytes[i+1] & 0x3F) << 12 | (bytes[i+2] & 0x3F) << 6 | (bytes[i+3] & 0x3F); n = 3; }
-      s += String.fromCharCode(cp); i += n;
-    }
-    return s;
-  }
-
-  function lzwDecode(codes) {
-    if (codes.length === 0) return [];
-    var dictSize = 256, dict = [];
-    for (var i = 0; i < 256; i++) dict.push(String.fromCharCode(i));
-    var w = String.fromCharCode(codes[0]);
-    var bytes = [codes[0]];
-    for (var i = 1; i < codes.length; i++) {
-      var entry, code = codes[i];
-      if (code < dictSize) entry = dict[code];
-      else if (code === dictSize) entry = w + w.charAt(0);
-      else return bytes;
-      for (var j = 0; j < entry.length; j++) bytes.push(entry.charCodeAt(j));
-      dict.push(w + entry.charAt(0));
-      dictSize++;
-      w = entry;
-    }
-    return bytes;
-  }
-
-  return {
-    decompress: function(input) {
-      if (!input) return '';
-      var bits = 0, bitLen = 0, codes = [];
-      for (var i = 0; i < input.length; i++) {
-        bits = (bits << 6) | R64[input[i]];
-        bitLen += 6;
-        while (bitLen >= 16) {
-          codes.push((bits >>> (bitLen - 16)) & 0xFFFF);
-          bitLen -= 16;
-        }
-      }
-      var bytes = lzwDecode(codes);
-      return utf8ToStr(bytes);
-    }
-  };
-})();
-
-// ========== KEY MAP (long ↔ short) ==========
-var REV_MAP = {
-  n:'name', g:'gender', nt:'nation',
-  s:'school', m:'major', x:'xltype', aq:'academic_qualification',
-  es:'educational_system', xb:'xllb', fy:'fenyuan', xs:'xisuo',
-  bj:'banji', xh:'xuehao', z:'zhuangtai',
-  rn:'ru_nian', ry:'ru_yue', rr:'ru_ri',
-  ln:'li_nian', ly:'li_yue', lr:'li_ri',
-  na:'nian', ye:'yue', ri:'ri',
-  ia:'image_a', ib:'image_b',
-  hg:'has_grad', gl:'grad_level',
-  gs:'grad_school', gm:'grad_major', gt:'grad_degree_type',
-  ge:'grad_educational_system', gp:'grad_enroll_type', gm2:'grad_train_mode',
-  gr:'grad_research', gv:'grad_supervisor',
-  gf:'grad_fenyuan', gx:'grad_xuehao', gz:'grad_zhuangtai',
-  gn:'grad_ru_nian', gy:'grad_ru_yue', gd:'grad_ru_ri',
-  hn:'grad_li_nian', hy:'grad_li_yue', hd:'grad_li_ri',
-  ga:'grad_image_a', gb:'grad_image_b'
-};
-var IMG_FIELDS2 = ['ia','ib','ga','gb'];
-function expandKeys(obj) {
-  var o = {};
-  for (var k in obj) {
-    if (!obj.hasOwnProperty(k)) continue;
-    var ek = REV_MAP[k] || k;
-    var v = obj[k];
-    // Add back data URL prefix for image fields that are raw base64
-    if (IMG_FIELDS2.indexOf(k) >= 0 && typeof v === 'string' && v.length > 4 && !v.startsWith('data:') && !v.startsWith('http')) {
-      if (v.charAt(1) === ':') {
-        // New format with type prefix: "w:base64..." or "j:base64..."
-        v = 'data:image/' + (v.charAt(0) === 'w' ? 'webp' : 'jpeg') + ';base64,' + v.substring(2);
-      } else if (v.indexOf('jpeg') < 0 && v.indexOf('webp') < 0) {
-        // Old format: raw base64 without prefix, assume JPEG
-        v = 'data:image/jpeg;base64,' + v;
-      }
-    }
-    o[ek] = v;
-  }
-  return o;
-}
-
 // ========== DATA DECODE ==========
 function decodeData(str) {
-  // Try new LZUTF8 format first
   try {
-    var json = LZUTF8.decompress(str);
-    if (json && json.length > 4) return expandKeys(JSON.parse(json));
-  } catch(e) {}
-  // Fallback to old base64 format
-  try {
+    // 新格式:先尝试 LZString 解码(大幅压缩含图片的链接)
+    if (typeof LZString !== 'undefined') {
+      var json = LZString.decompressFromEncodedURIComponent(str);
+      if (json) return JSON.parse(json);
+    }
+    // 回退旧格式:base64url(兼容旧链接)
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (str.length % 4) str += '=';
-    var json2 = decodeURIComponent(escape(atob(str)));
-    if (json2) return expandKeys(JSON.parse(json2));
-  } catch(e) {}
-  return null;
+    var json = decodeURIComponent(escape(atob(str)));
+    return JSON.parse(json);
+  } catch(e) { return null; }
 }
 
 function getUrlParam(key) {
@@ -279,7 +182,7 @@ function renderReport(d) {
   html += '<div class="header-bar"></div>';
   html += '<div class="report-header">';
   html += '<h1>教育部学历证书电子注册备案表</h1>';
-  html += '<div class="subtitle">中国高等教育学生信息网（学信网） | www.chsi.com.cn</div>';
+  html += '<div class="subtitle">中国高等教育学生信息网(学信网) | www.chsi.com.cn</div>';
   html += '</div>';
 
   // Basic info row
@@ -339,20 +242,20 @@ function renderReport(d) {
   html += '<div class="verify-section">';
   html += '<div class="verify-title">在线验证</div>';
   html += '<div class="verify-grid">';
-  html += '<div class="v-item"><span class="v-label">在线验证码：</span><span class="v-val">' + verifyCode + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">报告编号：</span><span class="v-val">' + reportNo + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">发证日期：</span><span class="v-val">' + issueDate + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">有效期至：</span><span class="v-val">' + expireStr + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">在线验证码:</span><span class="v-val">' + verifyCode + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">报告编号:</span><span class="v-val">' + reportNo + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">发证日期:</span><span class="v-val">' + issueDate + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">有效期至:</span><span class="v-val">' + expireStr + '</span></div>';
   html += '</div>';
-  html += '<div class="verify-qrcode">扫码验证<br>（仅供展示）</div>';
+  html += '<div class="verify-qrcode">扫码验证<br>(仅供展示)</div>';
   html += '</div>';
 
   // Footer
   html += '<div class="report-footer">';
-  html += '<p><b>说明：</b></p>';
-  html += '<p>1、备案表是依据《高等学校学生学籍学历电子注册办法》（教学[2014]11号）对学历证书电子注册复核备案的结果。</p>';
-  html += '<p>2、本备案表为模拟样式，仅供展示用途。正式学信网备案表请访问 https://www.chsi.com.cn 获取。</p>';
-  html += '<p class="warn">★ 本页面仅供个人展示使用，不具有官方效力。</p>';
+  html += '<p><b>说明:</b></p>';
+  html += '<p>1、备案表是依据<高等学校学生学籍学历电子注册办法>(教学[2014]11号)对学历证书电子注册复核备案的结果.</p>';
+  html += '<p>2、本备案表为模拟样式,仅供展示用途.正式学信网备案表请访问 https://www.chsi.com.cn 获取.</p>';
+  html += '<p class="warn">★ 本页面仅供个人展示使用,不具有官方效力.</p>';
   html += '</div>';
 
   html += '</div>';
@@ -363,7 +266,7 @@ function renderReport(d) {
     html += '<div class="header-bar"></div>';
     html += '<div class="report-header">';
     html += '<h1>教育部学历证书电子注册备案表</h1>';
-    html += '<div class="subtitle">中国高等教育学生信息网（学信网） | www.chsi.com.cn</div>';
+    html += '<div class="subtitle">中国高等教育学生信息网(学信网) | www.chsi.com.cn</div>';
     html += '<div style="margin-top:4px"><span class="badge badge-grad">研究生学历</span></div>';
     html += '</div>';
 
@@ -422,19 +325,19 @@ function renderReport(d) {
     var gradVerifyCode = generateVerifyCode();
     var gradReportNo = generateReportNo();
     html += '<div class="verify-grid">';
-    html += '<div class="v-item"><span class="v-label">在线验证码：</span><span class="v-val">' + gradVerifyCode + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">报告编号：</span><span class="v-val">' + gradReportNo + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">发证日期：</span><span class="v-val">' + issueDate + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">有效期至：</span><span class="v-val">' + expireStr + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">在线验证码:</span><span class="v-val">' + gradVerifyCode + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">报告编号:</span><span class="v-val">' + gradReportNo + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">发证日期:</span><span class="v-val">' + issueDate + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">有效期至:</span><span class="v-val">' + expireStr + '</span></div>';
     html += '</div>';
-    html += '<div class="verify-qrcode">扫码验证<br>（仅供展示）</div>';
+    html += '<div class="verify-qrcode">扫码验证<br>(仅供展示)</div>';
     html += '</div>';
 
     html += '<div class="report-footer">';
-    html += '<p><b>说明：</b></p>';
-    html += '<p>1、备案表是依据《高等学校学生学籍学历电子注册办法》（教学[2014]11号）对学历证书电子注册复核备案的结果。</p>';
-    html += '<p>2、本备案表为模拟样式，仅供展示用途。正式学信网备案表请访问 https://www.chsi.com.cn 获取。</p>';
-    html += '<p class="warn">★ 本页面仅供个人展示使用，不具有官方效力。</p>';
+    html += '<p><b>说明:</b></p>';
+    html += '<p>1、备案表是依据<高等学校学生学籍学历电子注册办法>(教学[2014]11号)对学历证书电子注册复核备案的结果.</p>';
+    html += '<p>2、本备案表为模拟样式,仅供展示用途.正式学信网备案表请访问 https://www.chsi.com.cn 获取.</p>';
+    html += '<p class="warn">★ 本页面仅供个人展示使用,不具有官方效力.</p>';
     html += '</div>';
 
     html += '</div>';
