@@ -481,7 +481,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
     </div>
     <div style="margin-top:6px;font-size:11px;color:#999">⚡ 通过 TinyURL 生成 · 极短 · 跨设备可打开</div>
 
-    <div class="form-preview-title" style="margin-top:18px">📎 原始链接（备选）</div>
+    <div class="form-preview-title" style="margin-top:18px">📎 原始链接(备选)</div>
     <div class="form-preview-link" id="fullLinkText" style="font-size:10px"></div>
     <button class="copy-btn" onclick="copyFullLink()">📋 复制</button>
     <span class="copy-ok" id="fullCopyOk">已复制!</span>
@@ -1103,14 +1103,18 @@ function initPg3() {
   if (imgA) {
     document.getElementById('admImg').src = imgA;
     document.getElementById('admImg').style.display = 'block';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = 'none';
   } else {
     document.getElementById('admImg').style.display = 'none';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = '';
   }
   if (imgB) {
     document.getElementById('degImg').src = imgB;
     document.getElementById('degImg').style.display = 'block';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = 'none';
   } else {
     document.getElementById('degImg').style.display = 'none';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = '';
   }
 }
 
