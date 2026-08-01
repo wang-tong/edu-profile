@@ -1124,6 +1124,12 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
 
 // ========== INIT ==========
 (function() {
+  // 分享链接按钮控制：始终判断，不管有无数据
+  var editBar = document.getElementById('editBar');
+  if (editBar && !isFromShareLink()) {
+    editBar.style.display = 'flex';
+  }
+
   // If data loaded from URL, init pages
   var hasData = !!(DATA.name && DATA.school);
   if (hasData) {

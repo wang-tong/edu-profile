@@ -645,7 +645,7 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
-  // 非分享链接才显示编辑按钮，分享链接始终隐藏
+  // 非分享链接才显示编辑按钮,分享链接始终隐藏
   if (!isFromShareLink()) {
     var editBar = document.getElementById('editBar');
     if (editBar) editBar.style.display = 'flex';
@@ -1124,6 +1124,12 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
 
 // ========== INIT ==========
 (function() {
+  // 分享链接按钮控制：始终判断，不管有无数据
+  var editBar = document.getElementById('editBar');
+  if (editBar && !isFromShareLink()) {
+    editBar.style.display = 'flex';
+  }
+
   // If data loaded from URL, init pages
   var hasData = !!(DATA.name && DATA.school);
   if (hasData) {
