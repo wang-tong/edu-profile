@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+
+# 短链接 API 代理（让前端无 CORS 调用）
+[[redirects]]
+  from = "/api/shorten"
+  to = "/.netlify/functions/shorten"
+  status = 200

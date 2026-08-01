@@ -603,37 +603,23 @@ function showShareDialog(url) {
   }, 300);
 }
 
-// 调用短链接API，支持多个服务fallback
+// 调用同域短链接API (Netlify Function代理, 无CORS问题)
 function shortenURL(longUrl, callback) {
-  // 主方案: cleanuri.com (支持CORS, 免费)
   var req = new XMLHttpRequest();
-  req.open('POST', 'https://cleanuri.com/api/v1/shorten', true);
-  req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  req.open('GET', '/api/shorten?url=' + encodeURIComponent(longUrl), true);
+  req.timeout = 8000;
   req.onload = function() {
     try {
       var data = JSON.parse(req.responseText);
-      if (data && data.result_url) return callback(null, data.result_url);
-    } catch(e) {}
-    tryFallback2();
-  };
-  req.onerror = function() { tryFallback2(); };
-  req.send('url=' + encodeURIComponent(longUrl));
-
-  // 备用方案: is.gd (GET接口)
-  function tryFallback2() {
-    var r2 = new XMLHttpRequest();
-    r2.open('GET', 'https://is.gd/create.php?format=simple&url=' + encodeURIComponent(longUrl), true);
-    r2.onload = function() {
-      var text = r2.responseText.trim();
-      if (text && text.indexOf('http') === 0) {
-        callback(null, text);
-      } else {
-        callback('all failed', null);
+      if (data && data.short_url && data.service !== 'none') {
+        return callback(null, data.short_url);
       }
-    };
-    r2.onerror = function() { callback('all failed', null); };
-    r2.send();
-  }
+    } catch(e) {}
+    callback('shorten failed', null);
+  };
+  req.onerror = function() { callback('network error', null); };
+  req.ontimeout = function() { callback('timeout', null); };
+  req.send();
 }
 
 // 异步生成短链接，更新UI
