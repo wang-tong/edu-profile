@@ -951,6 +951,26 @@ function initPg2() {
     var gradTab2 = document.getElementById('gradTab');
     if (gradTab2) gradTab2.style.display = 'none';
   }
+
+  // 照片显示
+  var imgA = d.image_a || '';
+  var imgB = d.image_b || '';
+  if (imgA) {
+    document.getElementById('admImg').src = imgA;
+    document.getElementById('admImg').style.display = 'block';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = 'none';
+  } else {
+    document.getElementById('admImg').style.display = 'none';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = '';
+  }
+  if (imgB) {
+    document.getElementById('degImg').src = imgB;
+    document.getElementById('degImg').style.display = 'block';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = 'none';
+  } else {
+    document.getElementById('degImg').style.display = 'none';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = '';
+  }
 }
 
 // ========== INIT PG3 ==========
