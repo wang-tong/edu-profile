@@ -725,9 +725,15 @@ function loadDataFromURL() {
   return null;
 }
 
+// 微信可打开的域名(Cloudflare隧道,不会被微信屏蔽)
+var WX_DOMAIN = 'https://relevant-merry-swaziland-contribute.trycloudflare.com';
+
 function buildShareURL() {
   var encoded = encodeData(DATA);
-  var url = window.location.origin + window.location.pathname + '?d=' + encoded;
+  var base = window.location.host.indexOf('trycloudflare.com') > 0
+    ? window.location.origin
+    : WX_DOMAIN;
+  var url = base + '/?d=' + encoded;
   return url;
 }
 
