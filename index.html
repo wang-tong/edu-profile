@@ -554,13 +554,41 @@ function buildShareURL() {
 }
 
 function genShareLink() {
-  var url = buildShareURL();
-  showShareDialog(url);
+  genShortLinkAndShow();
 }
 
 function openReport() {
+  // 备案表优先使用短链接
+  var sParam = new URLSearchParams(window.location.search).get('s');
+  if (sParam) {
+    window.open('report.html?s=' + sParam, '_blank');
+    return;
+  }
   var url = buildShareURL();
   window.open('report.html?d=' + url.split('?d=')[1], '_blank');
+}
+
+async function genShortLinkAndShow() {
+  DATA = collectFormData();
+  var url = await getShortUrl();
+  showShareDialog(url);
+}
+
+async function getShortUrl() {
+  try {
+    var resp = await fetch('/api/store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: DATA })
+    });
+    var result = await resp.json();
+    if (result.id) {
+      return window.location.origin + window.location.pathname + '?s=' + result.id;
+    }
+  } catch(e) {
+    console.log('短链接生成失败,降级为长链接:', e);
+  }
+  return buildShareURL();
 }
 
 function showShareDialog(url) {
@@ -1182,9 +1210,9 @@ function collectFormData() {
   return d;
 }
 
-function submitForm() {
+async function submitForm() {
   DATA = collectFormData();
-  var url = buildShareURL();
+  var url = await getShortUrl();
 
   // Show share dialog
   var preview = document.getElementById('formPreview');
@@ -1194,26 +1222,33 @@ function submitForm() {
 
   // Update current URL without reload
   try {
-    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
-    window.history.replaceState({}, '', newUrl);
+    window.history.replaceState({}, '', url);
   } catch(e) {}
 
-  // 链接长度检查(微信内置浏览器建议控制在6000字符以内)
-  if (url.length > 6000) {
-    toast('⚠️ 链接较长(' + url.length + '字符),微信可能截断,建议少填图片URL');
-  } else {
-    toast('信息已保存,链接已生成!');
-  }
+  toast('信息已保存,短链接已生成!');
 }
 
-function submitAndPreview() {
+async function submitAndPreview() {
   DATA = collectFormData();
 
-  // Update URL
+  // 尝试生成短链接更新URL
   try {
-    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
-    window.history.replaceState({}, '', newUrl);
-  } catch(e) {}
+    var resp = await fetch('/api/store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: DATA })
+    });
+    var result = await resp.json();
+    if (result.id) {
+      var newUrl = window.location.origin + window.location.pathname + '?s=' + result.id;
+      window.history.replaceState({}, '', newUrl);
+    }
+  } catch(e) {
+    try {
+      var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
+      window.history.replaceState({}, '', newUrl);
+    } catch(e2) {}
+  }
 
   // Navigate to pg2 to preview
   backTo('pg1');
@@ -1231,40 +1266,66 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
   });
 });
 
+function loadFromShortCode(id) {
+  return fetch('/api/store?id=' + encodeURIComponent(id))
+    .then(function(resp) {
+      if (!resp.ok) return null;
+      return resp.json();
+    })
+    .catch(function() { return null; });
+}
+
 // ========== INIT ==========
 (function() {
-  // 分享链接按钮控制:始终判断,不管有无数据
-  var editBar = document.getElementById('editBar');
-  if (editBar && !isFromShareLink()) {
-    editBar.style.display = 'flex';
-  }
-
-  // If data loaded from URL, init pages
-  var hasData = !!(DATA.name && DATA.school);
-  if (hasData) {
-    initPg1();
-    // 有数据时显示备案表按钮
-    var reportBtn = document.getElementById('reportBtn');
-    if (reportBtn) reportBtn.style.display = '';
-  }
-
-  // Handle ID param for backward compatibility
   var params = new URLSearchParams(window.location.search);
-  var id = params.get('id');
-  if (!id) {
-    var hash = window.location.hash;
-    var m = hash.match(/[?&]id=([^&]+)/);
-    if (m) id = m[1];
-  }
-  if (id && id.length > 8) {
-    console.log('[app] ID (legacy):', id);
+  var shortId = params.get('s');
+
+  function runInit() {
+    var editBar = document.getElementById('editBar');
+    if (editBar && !isFromShareLink()) {
+      editBar.style.display = 'flex';
+    }
+
+    var hasData = !!(DATA.name && DATA.school);
+    if (hasData) {
+      initPg1();
+      var reportBtn = document.getElementById('reportBtn');
+      if (reportBtn) reportBtn.style.display = '';
+    }
+
+    var id = params.get('id');
+    if (!id) {
+      var hash = window.location.hash;
+      var m = hash.match(/[?&]id=([^&]+)/);
+      if (m) id = m[1];
+    }
+    if (id && id.length > 8) {
+      console.log('[app] ID (legacy):', id);
+    }
+
+    console.log('[app] 学信档案已就绪');
+    if (hasData) {
+      console.log('[app] 已加载数据: ' + DATA.name + ' - ' + DATA.school);
+    } else {
+      console.log('[app] 未检测到数据,请点击"填写/编辑信息"或通过分享链接打开');
+    }
   }
 
-  console.log('[app] 学信档案已就绪');
-  if (hasData) {
-    console.log('[app] 已加载数据: ' + DATA.name + ' - ' + DATA.school);
+  if (shortId) {
+    // 短链接：异步加载
+    console.log('[app] 检测到短链接,正在加载...');
+    loadFromShortCode(shortId).then(function(loaded) {
+      if (loaded && loaded.name) {
+        DATA = loaded;
+        console.log('[app] 短链接数据加载成功');
+      } else {
+        console.log('[app] 短链接加载失败');
+        toast('链接已失效或不存在');
+      }
+      runInit();
+    });
   } else {
-    console.log('[app] 未检测到数据,请点击"填写/编辑信息"或通过分享链接打开');
+    runInit();
   }
 })();
 </script>

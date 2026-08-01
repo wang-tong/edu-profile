@@ -124,12 +124,34 @@ function getUrlParam(key) {
   return m ? decodeURIComponent(m[1]) : '';
 }
 
-// Load data from URL
+// Load data from URL (supports ?s= short link and ?d= fallback)
 var encoded = getUrlParam('d');
 var data = encoded ? decodeData(encoded) : null;
 
 function hasInfo(d) {
   return !!(d && d.name && d.school);
+}
+
+// Check ?s= short link first
+var shortId = getUrlParam('s');
+if (shortId) {
+  fetch('/api/store?id=' + encodeURIComponent(shortId))
+    .then(function(resp) { return resp.ok ? resp.json() : null; })
+    .then(function(loaded) {
+      if (loaded && loaded.name) { data = loaded; }
+      if (data) {
+        renderReport(data);
+      } else {
+        document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+      }
+    })
+    .catch(function() {
+      document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>加载失败，请重试</p></div>';
+    });
+} else if (data) {
+  renderReport(data);
+} else {
+  document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>未检测到分享数据</p><p style="margin-top:10px">请使用 <a href="index.html">分享链接</a> 打开此页面</p></div>';
 }
 
 function hasGradInfo(d) {
@@ -344,12 +366,7 @@ function renderReport(d) {
   document.getElementById('reportContainer').innerHTML = html;
 }
 
-// ========== Init ==========
-if (data) {
-  renderReport(data);
-} else {
-  document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>未检测到分享数据</p><p style="margin-top:10px">请使用 <a href="index.html">分享链接</a> 打开此页面</p></div>';
-}
+
 </script>
 </body>
 </html>

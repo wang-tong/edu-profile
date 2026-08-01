@@ -1,0 +1,8 @@
+[build]
+  publish = "/"
+  command = "echo 'Build complete'"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
