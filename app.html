@@ -182,6 +182,10 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .grad-type-tabs{display:flex;gap:8px;margin-bottom:14px}
 .grad-type-tab{flex:1;text-align:center;padding:10px 0;border-radius:8px;border:1.5px solid #ddd;font-size:13px;cursor:pointer;color:var(--text-gray);transition:all .2s}
 .grad-type-tab.active{border-color:var(--blue);color:var(--blue);background:#f0f4ff}
+.upload-row{display:flex;gap:8px;align-items:center}
+.upload-input{flex:1}
+.upload-btn{width:44px;height:44px;border:2px dashed #ccc;border-radius:10px;background:#fafafa;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s}
+.upload-btn:hover{border-color:var(--primary)}
 .form-submit{width:100%;height:48px;background:var(--primary);border:none;border-radius:12px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;margin-top:8px}
 .form-submit:active{opacity:.85}
 .form-submit.secondary{background:var(--blue)}
@@ -381,8 +385,22 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
       <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fLiDate" type="date"></div>
     </div>
     <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option><option value="肄业">肄业</option></select></div>
-    <div class="form-group"><label class="form-label">录取照片URL (可选)</label><input class="form-input" id="fImgA" placeholder="图片链接地址"></div>
-    <div class="form-group"><label class="form-label">学历照片URL (可选)</label><input class="form-input" id="fImgB" placeholder="图片链接地址"></div>
+    <div class="form-group">
+      <label class="form-label">录取照片 (可选)</label>
+      <div class="upload-row">
+        <input class="form-input upload-input" id="fImgA" placeholder="粘贴图片链接 或 点击右侧上传">
+        <input type="file" accept="image/*" id="fImgA_file" style="display:none" onchange="handleImgUpload(this,'fImgA')">
+        <button type="button" class="upload-btn" onclick="document.getElementById('fImgA_file').click()">📷</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">学历照片 (可选)</label>
+      <div class="upload-row">
+        <input class="form-input upload-input" id="fImgB" placeholder="粘贴图片链接 或 点击右侧上传">
+        <input type="file" accept="image/*" id="fImgB_file" style="display:none" onchange="handleImgUpload(this,'fImgB')">
+        <button type="button" class="upload-btn" onclick="document.getElementById('fImgB_file').click()">📷</button>
+      </div>
+    </div>
   </div>
 
   <!-- 研究生信息(可选) -->
@@ -421,6 +439,22 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
           <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fGLiDate" type="date"></div>
         </div>
         <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fGStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option></select></div>
+        <div class="form-group">
+          <label class="form-label">录取照片 (可选)</label>
+          <div class="upload-row">
+            <input class="form-input upload-input" id="fGImgA" placeholder="粘贴图片链接 或 点击右侧上传">
+            <input type="file" accept="image/*" id="fGImgA_file" style="display:none" onchange="handleImgUpload(this,'fGImgA')">
+            <button type="button" class="upload-btn" onclick="document.getElementById('fGImgA_file').click()">📷</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">学历照片 (可选)</label>
+          <div class="upload-row">
+            <input class="form-input upload-input" id="fGImgB" placeholder="粘贴图片链接 或 点击右侧上传">
+            <input type="file" accept="image/*" id="fGImgB_file" style="display:none" onchange="handleImgUpload(this,'fGImgB')">
+            <button type="button" class="upload-btn" onclick="document.getElementById('fGImgB_file').click()">📷</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -650,6 +684,39 @@ function initPg1() {
     var editBar = document.getElementById('editBar');
     if (editBar) editBar.style.display = 'flex';
   }
+}
+
+function handleImgUpload(inputEl, targetId) {
+  var file = inputEl.files[0];
+  if (!file) return;
+  if (!file.type.match(/image\//)) { alert('请选择图片文件'); return; }
+
+  var target = document.getElementById(targetId);
+  target.value = '处理中...';
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      // 压缩到缩略图大小(最大200px宽,高质量JPEG)
+      var maxW = 200, maxH = 240;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var base64 = canvas.toDataURL('image/jpeg', 0.75);
+
+      target.value = base64;
+      target.style.color = '#09b37d';
+      toast('照片已导入!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function isFromShareLink() {
@@ -943,6 +1010,8 @@ function populateForm() {
   if (d.grad_li_nian) setVal('fGLiDate', d.grad_li_nian + '-' + padNum(d.grad_li_yue) + '-' + padNum(d.grad_li_ri));
   else setVal('fGLiDate', '');
   setVal('fGStatus', d.grad_zhuangtai);
+  setVal('fGImgA', d.grad_image_a);
+  setVal('fGImgB', d.grad_image_b);
 
   // Set grad type tab
   if (d.grad_level) {
@@ -1068,6 +1137,8 @@ function collectFormData() {
     d.grad_li_ri = gLi.ri;
 
     d.grad_zhuangtai = getVal('fGStatus');
+    d.grad_image_a = getVal('fGImgA');
+    d.grad_image_b = getVal('fGImgB');
   }
 
   return d;
@@ -1124,7 +1195,7 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
 
 // ========== INIT ==========
 (function() {
-  // 分享链接按钮控制：始终判断，不管有无数据
+  // 分享链接按钮控制:始终判断,不管有无数据
   var editBar = document.getElementById('editBar');
   if (editBar && !isFromShareLink()) {
     editBar.style.display = 'flex';
