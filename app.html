@@ -794,7 +794,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!params.get('d');
+  return !!(params.get('d') || params.get('s'));
 }
 
 // ========== INIT PG2 ==========
@@ -830,7 +830,9 @@ function initPg2() {
     document.getElementById('xlDegree').textContent = '--';
     document.getElementById('xlMajor').textContent = '--';
     document.getElementById('xlType').textContent = '--';
-    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">请先填写' + shortLabel + '信息</span><span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>';
+    var emptyText = isFromShareLink() ? '暂无数据' : ('请先填写' + shortLabel + '信息');
+    var emptyLink = isFromShareLink() ? '' : ('<span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>');
+    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">' + emptyText + '</span>' + emptyLink;
   }
 
   // Graduate cards
@@ -866,6 +868,11 @@ function initPg2() {
     gradBlock.style.display = 'none';
     document.getElementById('gradTab').style.display = 'none';
   }
+  // 分享链接模式下隐藏尝试绑定等操作入口
+  var bindLinks = document.querySelectorAll('.sect-action-link');
+  bindLinks.forEach(function(el) {
+    if (isFromShareLink()) el.style.display = 'none';
+  });
 }
 
 // ========== INIT PG3 ==========
@@ -1280,6 +1287,11 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
     // 有数据时显示备案表按钮
     var reportBtn = document.getElementById('reportBtn');
     if (reportBtn) reportBtn.style.display = '';
+  }
+
+  // 分享链接有数据时直接跳转到 pg2 展示,不显示首页编辑界面
+  if (isFromShareLink() && hasData) {
+    navTo('pg2');
   }
 
   // Handle ID param for backward compatibility
