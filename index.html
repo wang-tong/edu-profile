@@ -563,6 +563,25 @@ function decodeData(str) {
 
 function loadDataFromURL() {
   var params = new URLSearchParams(window.location.search);
+
+  // 新格式: ?q=ID.压缩数据 (单参数,更简洁)
+  var q = params.get('q');
+  if (q && q.length > 4) {
+    var dotIdx = q.indexOf('.');
+    if (dotIdx > 0) {
+      var dataPart = q.substring(dotIdx + 1);
+      if (dataPart.length > 4) {
+        var data = decodeData(dataPart);
+        if (data) { console.log('[app] 从?q=加载数据成功'); return data; }
+      }
+    } else {
+      // ?q=无点分隔,尝试直接解码(兼容纯数据格式)
+      var data = decodeData(q);
+      if (data) { console.log('[app] 从?q=加载数据成功'); return data; }
+    }
+  }
+
+  // 旧格式兼容: ?d=
   var d = params.get('d');
   if (!d) {
     var hash = window.location.hash;
@@ -571,17 +590,15 @@ function loadDataFromURL() {
   }
   if (d && d.length > 4) {
     var data = decodeData(d);
-    if (data) {
-      console.log('[app] 从URL加载数据成功');
-      return data;
-    }
+    if (data) { console.log('[app] 从?d=加载数据成功(旧格式)'); return data; }
   }
   return null;
 }
 
 function buildShareURL() {
   var encoded = encodeData(DATA);
-  var url = window.location.origin + window.location.pathname + '?d=' + encoded;
+  // 简洁单参数: ?q=.数据 (无本地ID的纯数据链接)
+  var url = window.location.origin + window.location.pathname + '?q=.' + encoded;
   return url;
 }
 
@@ -590,46 +607,40 @@ function genShareLink() {
 }
 
 function openReport() {
-  // 备案表: 优先 ?s= (短链接,可通过API跨设备)
   var params = new URLSearchParams(window.location.search);
-  var sParam = params.get('s');
-  var dParam = params.get('d');
+  // 优先使用新格式 ?q=
+  var qParam = params.get('q');
   var reportUrl = 'report.html';
-  if (sParam) {
-    reportUrl += '?s=' + sParam;
-    if (dParam) reportUrl += '&d=' + dParam;
-  } else if (dParam) {
-    reportUrl += '?d=' + dParam;
+  if (qParam) {
+    reportUrl += '?q=' + qParam;
+  } else {
+    // 旧格式兼容
+    var sParam = params.get('s');
+    var dParam = params.get('d');
+    if (sParam && dParam) {
+      reportUrl += '?s=' + sParam + '&d=' + dParam;
+    } else if (dParam) {
+      reportUrl += '?d=' + dParam;
+    } else if (sParam) {
+      reportUrl += '?s=' + sParam;
+    }
   }
   window.open(reportUrl, '_blank');
 }
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  toast('正在生成分享链接...');
-  getShortUrl(function(url) {
-    showShareDialog(url);
-  });
+  var url = getShortUrl();
+  showShareDialog(url);
 }
 
-function getShortUrl(callback) {
-  var localId = genLocalId(8);
-  LOCAL_STORE[localId] = DATA;
+function getShortUrl() {
+  // 简洁单参数: ?q=ID.压缩数据 (ID=本设备localStorage, 数据=跨设备回退)
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
   saveLocalStore();
-
-  var baseUrl = window.location.origin + window.location.pathname;
-
-  // 尝试上传到Netlify Blobs → 极简链接 ?s=8位短码
-  apiStorePut(DATA).then(function(result) {
-    var id = result.id;
-    LOCAL_STORE[id] = DATA;
-    saveLocalStore();
-    callback(baseUrl + '?s=' + id);
-  }).catch(function() {
-    // API不可用,回退到 ?s=XXXX&d=压缩数据
-    var encoded = encodeData(DATA);
-    callback(baseUrl + '?s=' + localId + '&d=' + encoded);
-  });
+  var encoded = encodeData(DATA);
+  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
 }
 
 function showShareDialog(url) {
@@ -798,7 +809,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!(params.get('d') || params.get('s'));
+  return !!(params.get('q') || params.get('d') || params.get('s'));
 }
 
 // ========== INIT PG2 ==========
@@ -1284,47 +1295,21 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
   });
 });
 
-// ========== API STORE (Netlify Blobs) ==========
-function apiStorePut(data) {
-  return fetch('/api/store', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({data: data})
-  }).then(function(r) {
-    if (!r.ok) throw new Error('API store failed');
-    return r.json();
-  });
-}
-
-function apiStoreGet(id) {
-  return fetch('/api/store?id=' + encodeURIComponent(id))
-    .then(function(r) {
-      if (!r.ok) throw new Error('API get failed');
-      return r.json();
-    });
-}
-
 function loadFromShortCode(id) {
-  // 1. 优先: localStorage (本设备)
-  if (LOCAL_STORE[id]) return Promise.resolve(LOCAL_STORE[id]);
-
-  // 2. Netlify API (跨设备)
-  return apiStoreGet(id).then(function(data) {
-    if (data && data.name) {
-      LOCAL_STORE[id] = data;
-      saveLocalStore();
-      return data;
-    }
-    return null;
-  }).catch(function() {
-    return null; // API不可用,让调用方走?d=回退
-  });
+  // 纯前端方案: 直接从 localStorage 读取
+  return Promise.resolve(LOCAL_STORE[id] || null);
 }
 
 // ========== INIT ==========
 (function() {
   var params = new URLSearchParams(window.location.search);
-  var shortId = params.get('s');
+  // 优先新格式 ?q=ID.DATA, 兼容旧格式 ?s=
+  var shortId = null;
+  var qParam = params.get('q');
+  if (qParam && qParam.indexOf('.') > 0) {
+    shortId = qParam.substring(0, qParam.indexOf('.'));
+  }
+  if (!shortId) shortId = params.get('s');
 
   function runInit() {
     var editBar = document.getElementById('editBar');

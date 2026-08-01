@@ -104,7 +104,7 @@ body{font-family:"SimSun","宋体",serif;background:var(--bg);min-height:100vh;c
 <div class="toolbar">
   <button class="btn-print" onclick="window.print()">🖨️ 打印备案表</button>
   <a class="btn-back" href="index.html">← 返回首页</a>
-  <span class="hint">如需截屏，请直接滚动截取下方完整页面</span>
+  <span class="hint">如需截屏,请直接滚动截取下方完整页面</span>
 </div>
 
 <div id="reportContainer"></div>
@@ -135,9 +135,27 @@ function getUrlParam(key) {
   return m ? decodeURIComponent(m[1]) : '';
 }
 
-// Load data from URL (supports ?s= short link, API, and ?d= fallback)
-var encoded = getUrlParam('d');
-var data = encoded ? decodeData(encoded) : null;
+// Load data from URL (supports ?q= new format, ?s=/?d= old format)
+var data = null;
+var shortId = null;
+
+// 新格式: ?q=ID.压缩数据
+var qParam = getUrlParam('q');
+if (qParam && qParam.length > 4) {
+  var dotIdx = qParam.indexOf('.');
+  if (dotIdx > 0) {
+    shortId = qParam.substring(0, dotIdx);
+    var dataPart = qParam.substring(dotIdx + 1);
+    if (dataPart.length > 4) data = decodeData(dataPart);
+  } else {
+    // ?q=无点分隔,尝试直接解码
+    data = decodeData(qParam);
+  }
+}
+
+// 旧格式兼容
+if (!data) data = getUrlParam('d') ? decodeData(getUrlParam('d')) : null;
+if (!shortId) shortId = getUrlParam('s');
 
 function hasInfo(d) {
   return !!(d && d.name && d.school);
@@ -150,41 +168,14 @@ try {
   if (saved) LOCAL_STORE = JSON.parse(saved);
 } catch(e) {}
 
-function saveLocalStore() {
-  try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
-}
-
-// Netlify API 获取数据(跨设备)
-function apiStoreGet(id) {
-  return fetch('/api/store?id=' + encodeURIComponent(id))
-    .then(function(r) { if (!r.ok) throw new Error('API get failed'); return r.json(); });
-}
-
-var shortId = getUrlParam('s');
-var noDataHtml = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
-
+// 加载逻辑: 优先 ?s=/?q=ID 读取localStorage, 失败则用 ?d=/?q=DATA 回退
 if (shortId) {
-  // 1. 先查 localStorage
   if (LOCAL_STORE[shortId] && LOCAL_STORE[shortId].name) {
     renderReport(LOCAL_STORE[shortId]);
+  } else if (data) {
+    renderReport(data);
   } else {
-    // 2. 尝试 Netlify API 加载
-    apiStoreGet(shortId).then(function(apiData) {
-      if (apiData && apiData.name) {
-        LOCAL_STORE[shortId] = apiData;
-        saveLocalStore();
-        renderReport(apiData);
-      } else {
-        throw new Error('API no data');
-      }
-    }).catch(function() {
-      // 3. 回退到 ?d= 参数
-      if (data) {
-        renderReport(data);
-      } else {
-        document.getElementById('reportContainer').innerHTML = noDataHtml;
-      }
-    });
+    document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">请使用原始分享链接打开</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
   }
 } else if (data) {
   renderReport(data);
@@ -235,7 +226,7 @@ function renderReport(d) {
   html += '<div class="header-bar"></div>';
   html += '<div class="report-header">';
   html += '<h1>教育部学历证书电子注册备案表</h1>';
-  html += '<div class="subtitle">中国高等教育学生信息网（学信网） | www.chsi.com.cn</div>';
+  html += '<div class="subtitle">中国高等教育学生信息网(学信网) | www.chsi.com.cn</div>';
   html += '</div>';
 
   // Basic info row
@@ -295,20 +286,20 @@ function renderReport(d) {
   html += '<div class="verify-section">';
   html += '<div class="verify-title">在线验证</div>';
   html += '<div class="verify-grid">';
-  html += '<div class="v-item"><span class="v-label">在线验证码：</span><span class="v-val">' + verifyCode + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">报告编号：</span><span class="v-val">' + reportNo + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">发证日期：</span><span class="v-val">' + issueDate + '</span></div>';
-  html += '<div class="v-item"><span class="v-label">有效期至：</span><span class="v-val">' + expireStr + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">在线验证码:</span><span class="v-val">' + verifyCode + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">报告编号:</span><span class="v-val">' + reportNo + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">发证日期:</span><span class="v-val">' + issueDate + '</span></div>';
+  html += '<div class="v-item"><span class="v-label">有效期至:</span><span class="v-val">' + expireStr + '</span></div>';
   html += '</div>';
-  html += '<div class="verify-qrcode">扫码验证<br>（仅供展示）</div>';
+  html += '<div class="verify-qrcode">扫码验证<br>(仅供展示)</div>';
   html += '</div>';
 
   // Footer
   html += '<div class="report-footer">';
-  html += '<p><b>说明：</b></p>';
-  html += '<p>1、备案表是依据《高等学校学生学籍学历电子注册办法》（教学[2014]11号）对学历证书电子注册复核备案的结果。</p>';
-  html += '<p>2、本备案表为模拟样式，仅供展示用途。正式学信网备案表请访问 https://www.chsi.com.cn 获取。</p>';
-  html += '<p class="warn">★ 本页面仅供个人展示使用，不具有官方效力。</p>';
+  html += '<p><b>说明:</b></p>';
+  html += '<p>1、备案表是依据<高等学校学生学籍学历电子注册办法>(教学[2014]11号)对学历证书电子注册复核备案的结果.</p>';
+  html += '<p>2、本备案表为模拟样式,仅供展示用途.正式学信网备案表请访问 https://www.chsi.com.cn 获取.</p>';
+  html += '<p class="warn">★ 本页面仅供个人展示使用,不具有官方效力.</p>';
   html += '</div>';
 
   html += '</div>';
@@ -319,7 +310,7 @@ function renderReport(d) {
     html += '<div class="header-bar"></div>';
     html += '<div class="report-header">';
     html += '<h1>教育部学历证书电子注册备案表</h1>';
-    html += '<div class="subtitle">中国高等教育学生信息网（学信网） | www.chsi.com.cn</div>';
+    html += '<div class="subtitle">中国高等教育学生信息网(学信网) | www.chsi.com.cn</div>';
     html += '<div style="margin-top:4px"><span class="badge badge-grad">研究生学历</span></div>';
     html += '</div>';
 
@@ -378,19 +369,19 @@ function renderReport(d) {
     var gradVerifyCode = generateVerifyCode();
     var gradReportNo = generateReportNo();
     html += '<div class="verify-grid">';
-    html += '<div class="v-item"><span class="v-label">在线验证码：</span><span class="v-val">' + gradVerifyCode + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">报告编号：</span><span class="v-val">' + gradReportNo + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">发证日期：</span><span class="v-val">' + issueDate + '</span></div>';
-    html += '<div class="v-item"><span class="v-label">有效期至：</span><span class="v-val">' + expireStr + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">在线验证码:</span><span class="v-val">' + gradVerifyCode + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">报告编号:</span><span class="v-val">' + gradReportNo + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">发证日期:</span><span class="v-val">' + issueDate + '</span></div>';
+    html += '<div class="v-item"><span class="v-label">有效期至:</span><span class="v-val">' + expireStr + '</span></div>';
     html += '</div>';
-    html += '<div class="verify-qrcode">扫码验证<br>（仅供展示）</div>';
+    html += '<div class="verify-qrcode">扫码验证<br>(仅供展示)</div>';
     html += '</div>';
 
     html += '<div class="report-footer">';
-    html += '<p><b>说明：</b></p>';
-    html += '<p>1、备案表是依据《高等学校学生学籍学历电子注册办法》（教学[2014]11号）对学历证书电子注册复核备案的结果。</p>';
-    html += '<p>2、本备案表为模拟样式，仅供展示用途。正式学信网备案表请访问 https://www.chsi.com.cn 获取。</p>';
-    html += '<p class="warn">★ 本页面仅供个人展示使用，不具有官方效力。</p>';
+    html += '<p><b>说明:</b></p>';
+    html += '<p>1、备案表是依据<高等学校学生学籍学历电子注册办法>(教学[2014]11号)对学历证书电子注册复核备案的结果.</p>';
+    html += '<p>2、本备案表为模拟样式,仅供展示用途.正式学信网备案表请访问 https://www.chsi.com.cn 获取.</p>';
+    html += '<p class="warn">★ 本页面仅供个人展示使用,不具有官方效力.</p>';
     html += '</div>';
 
     html += '</div>';
