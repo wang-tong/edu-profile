@@ -597,7 +597,7 @@ function loadDataFromURL() {
 
 function buildShareURL() {
   var encoded = encodeData(DATA);
-  // 简洁单参数: ?q=.数据 (无本地ID的纯数据链接)
+  // 快速分享: 数据直接放在?q=中(Gist创建需要网络,这里用压缩内嵌)
   var url = window.location.origin + window.location.pathname + '?q=.' + encoded;
   return url;
 }
@@ -608,39 +608,63 @@ function genShareLink() {
 
 function openReport() {
   var params = new URLSearchParams(window.location.search);
-  // 优先使用新格式 ?q=
-  var qParam = params.get('q');
   var reportUrl = 'report.html';
+  // 优先 ?q= (新格式), 其次 ?s= (Gist短链接), 再 ?d= (旧格式)
+  var qParam = params.get('q');
+  var sParam = params.get('s');
+  var dParam = params.get('d');
   if (qParam) {
     reportUrl += '?q=' + qParam;
-  } else {
-    // 旧格式兼容
-    var sParam = params.get('s');
-    var dParam = params.get('d');
-    if (sParam && dParam) {
-      reportUrl += '?s=' + sParam + '&d=' + dParam;
-    } else if (dParam) {
-      reportUrl += '?d=' + dParam;
-    } else if (sParam) {
-      reportUrl += '?s=' + sParam;
-    }
+  } else if (sParam) {
+    reportUrl += '?s=' + sParam;
+    if (dParam) reportUrl += '&d=' + dParam;
+  } else if (dParam) {
+    reportUrl += '?d=' + dParam;
   }
   window.open(reportUrl, '_blank');
 }
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  var url = getShortUrl();
-  showShareDialog(url);
+  getShortUrl().then(function(url) { showShareDialog(url); });
 }
 
-function getShortUrl() {
-  // 简洁单参数: ?q=ID.压缩数据 (ID=本设备localStorage, 数据=跨设备回退)
-  var id = genLocalId(8);
-  LOCAL_STORE[id] = DATA;
+// 通过 GitHub Gist 存储数据,获取极短链接
+async function createGist(data) {
+  var resp = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: { 'Accept': 'application/vnd.github.v3+json' },
+    body: JSON.stringify({
+      public: true,
+      description: 'edu-profile',
+      files: { 'data.json': { content: JSON.stringify(data) } }
+    })
+  });
+  if (!resp.ok) throw new Error('Gist creation failed: ' + resp.status);
+  var gist = await resp.json();
+  return gist.id;
+}
+
+async function getShortUrl() {
+  // 保存到 localStorage
+  var localId = genLocalId(8);
+  LOCAL_STORE[localId] = DATA;
   saveLocalStore();
-  var encoded = encodeData(DATA);
-  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
+
+  // 优先创建 Gist → 极短链接: /edu-profile/s/GIST_ID
+  try {
+    var gistId = await createGist(DATA);
+    // 用 gistId 替换 localId, 统一用 gistId 作为 key
+    LOCAL_STORE[gistId] = DATA;
+    if (gistId !== localId) delete LOCAL_STORE[localId];
+    saveLocalStore();
+    return window.location.origin + '/edu-profile/s/' + gistId;
+  } catch(e) {
+    console.log('[app] Gist创建失败,回退到?q=格式:', e.message);
+    // 回退: 数据压缩在URL中(兼容)
+    var encoded = encodeData(DATA);
+    return window.location.origin + window.location.pathname + '?q=' + localId + '.' + encoded;
+  }
 }
 
 function showShareDialog(url) {
@@ -809,7 +833,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!(params.get('q') || params.get('d') || params.get('s'));
+  return !!(params.get('q') || params.get('s') || params.get('d'));
 }
 
 // ========== INIT PG2 ==========
@@ -1256,33 +1280,24 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  var url = getShortUrl();
-
-  // Show share dialog
-  var preview = document.getElementById('formPreview');
-  document.getElementById('shareLinkText').textContent = url;
-  preview.classList.add('show');
-  preview.scrollIntoView({behavior: 'smooth'});
-
-  // Update current URL without reload
-  try {
-    window.history.replaceState({}, '', url);
-  } catch(e) {}
-
-  toast('信息已保存,短链接已生成!');
+  getShortUrl().then(function(url) {
+    var preview = document.getElementById('formPreview');
+    document.getElementById('shareLinkText').textContent = url;
+    preview.classList.add('show');
+    preview.scrollIntoView({behavior: 'smooth'});
+    try { window.history.replaceState({}, '', url); } catch(e) {}
+    toast('信息已保存,短链接已生成!');
+  });
 }
 
 function submitAndPreview() {
   DATA = collectFormData();
-
-  var url = getShortUrl();
-  try {
-    window.history.replaceState({}, '', url);
-  } catch(e) {}
-
-  backTo('pg1');
-  setTimeout(function() { navTo('pg2'); }, 100);
-  toast('请查看高等教育信息页预览效果');
+  getShortUrl().then(function(url) {
+    try { window.history.replaceState({}, '', url); } catch(e) {}
+    backTo('pg1');
+    setTimeout(function() { navTo('pg2'); }, 100);
+    toast('请查看高等教育信息页预览效果');
+  });
 }
 
 // ========== PG1 TABBAR ==========
@@ -1348,27 +1363,47 @@ function loadFromShortCode(id) {
   }
 
   if (shortId) {
-    // 短链接: 先尝试 localStorage, 失败则用 ?d= 回退
+    // 短链接: localStorage → ?d=回退 → Gist API(跨设备回退)
     console.log('[app] 检测到短链接,正在加载...');
     loadFromShortCode(shortId).then(function(loaded) {
       if (loaded && loaded.name) {
         DATA = loaded;
         console.log('[app] 短链接数据加载成功(本设备)');
+        runInit();
       } else {
-        // localStorage 无数据, 尝试 URL 中的 ?d= 回退
+        // localStorage 无数据, 尝试 URL 中的 ?q=/?d= 回退
         var fallback = loadDataFromURL();
         if (fallback) {
           DATA = fallback;
-          // 顺便存回 localStorage
           LOCAL_STORE[shortId] = fallback;
           saveLocalStore();
-          console.log('[app] 从 ?d= 回退加载成功');
+          console.log('[app] 从URL回退加载成功');
+          runInit();
         } else {
-          console.log('[app] 数据加载失败: localStorage和URL均无数据');
-          toast('链接已失效或不存在');
+          // 尝试 GitHub Gist API (跨设备回退)
+          console.log('[app] 尝试从Gist加载...');
+          fetch('https://api.github.com/gists/' + encodeURIComponent(shortId), {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          }).then(function(r) { return r.json(); })
+            .then(function(gist) {
+              var file = gist.files && gist.files['data.json'];
+              if (file && file.content) {
+                DATA = JSON.parse(file.content);
+                LOCAL_STORE[shortId] = DATA;
+                saveLocalStore();
+                console.log('[app] 从Gist加载成功(跨设备)');
+              } else {
+                console.log('[app] 数据加载失败');
+                toast('链接已失效或不存在');
+              }
+              runInit();
+            }).catch(function() {
+              console.log('[app] Gist加载失败');
+              toast('链接已失效或不存在');
+              runInit();
+            });
         }
       }
-      runInit();
     });
   } else {
     // 没有 ?s=,尝试从 ?d= 或 hash 加载

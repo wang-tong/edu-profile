@@ -168,14 +168,32 @@ try {
   if (saved) LOCAL_STORE = JSON.parse(saved);
 } catch(e) {}
 
-// 加载逻辑: 优先 ?s=/?q=ID 读取localStorage, 失败则用 ?d=/?q=DATA 回退
+// 加载逻辑: 1) localStorage  2) ?d=/?q=DATA  3) Gist API(跨设备回退)
 if (shortId) {
   if (LOCAL_STORE[shortId] && LOCAL_STORE[shortId].name) {
     renderReport(LOCAL_STORE[shortId]);
   } else if (data) {
     renderReport(data);
   } else {
-    document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">请使用原始分享链接打开</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+    // 尝试从 GitHub Gist 拉取(跨设备回退)
+    fetch('https://api.github.com/gists/' + encodeURIComponent(shortId), {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    }).then(function(r) {
+      if (!r.ok) throw new Error('Not found');
+      return r.json();
+    }).then(function(gist) {
+      var file = gist.files && gist.files['data.json'];
+      if (file && file.content) {
+        var gistData = JSON.parse(file.content);
+        LOCAL_STORE[shortId] = gistData;
+        try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
+        renderReport(gistData);
+      } else { showError(); }
+    }).catch(function() { showError(); });
+
+    function showError() {
+      document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">请使用原始分享链接打开</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+    }
   }
 } else if (data) {
   renderReport(data);

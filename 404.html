@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>跳转中...</title>
+<script>
+// 短链接路由: /edu-profile/s/GIST_ID → 查localStorage或Gist API
+(function(){
+  var path = window.location.pathname;
+  var m = path.match(/\/s\/([A-Za-z0-9]+)$/);
+  if (!m) {
+    // 不是短链接,跳转到首页
+    document.body.innerHTML = '<div style="text-align:center;padding:100px 20px;font-family:sans-serif"><p>页面不存在</p><a href="/edu-profile/" style="color:#1a5f9b">前往首页</a></div>';
+    return;
+  }
+  var code = m[1];
+  
+  // 1) 尝试 localStorage (同设备秒开)
+  var store = {};
+  try {
+    var s = localStorage.getItem('edu_local_store');
+    if (s) store = JSON.parse(s);
+  } catch(e) {}
+  
+  if (store[code] && store[code].name) {
+    window.location.replace('/edu-profile/?s=' + encodeURIComponent(code));
+    return;
+  }
+  
+  // 2) 从 GitHub Gist 拉取数据(跨设备)
+  fetch('https://api.github.com/gists/' + encodeURIComponent(code), {
+    headers: { 'Accept': 'application/vnd.github.v3+json' }
+  })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Gist not found');
+      return r.json();
+    })
+    .then(function(gist) {
+      var file = gist.files && gist.files['data.json'];
+      if (!file || !file.content) throw new Error('Invalid gist');
+      try {
+        var data = JSON.parse(file.content);
+        if (!data.name) throw new Error('Invalid data');
+        // 存入 localStorage 下次秒开
+        store[code] = data;
+        try { localStorage.setItem('edu_local_store', JSON.stringify(store)); } catch(e) {}
+        window.location.replace('/edu-profile/?s=' + encodeURIComponent(code));
+      } catch(e) { showError(); }
+    })
+    .catch(function() { showError(); });
+  
+  function showError() {
+    document.body.innerHTML = '<div style="text-align:center;padding:100px 20px;font-family:sans-serif"><h3>链接已失效</h3><p style="color:#999;margin-top:10px">该短链接不存在或已被删除</p><a href="/edu-profile/" style="margin-top:20px;display:inline-block;color:#1a5f9b;font-size:15px">→ 前往首页</a></div>';
+  }
+})();
+</script>
+</head><body></body></html>
