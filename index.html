@@ -869,8 +869,8 @@ function initPg2() {
     document.getElementById('gradTab').style.display = 'none';
   }
   // 分享链接模式下隐藏尝试绑定等操作入口
-  var bindLinks = document.querySelectorAll('.sect-action-link');
-  bindLinks.forEach(function(el) {
+  var bindActions = document.querySelectorAll('.sect-action');
+  bindActions.forEach(function(el) {
     if (isFromShareLink()) el.style.display = 'none';
   });
 }
