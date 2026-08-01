@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -645,7 +645,7 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
-  // 通过分享链接打开时，隐藏编辑按钮，首页保持可见
+  // 通过分享链接打开时,只隐藏编辑按钮,其他功能正常使用
   if (isFromShareLink()) {
     var editBar = document.getElementById('editBar');
     if (editBar) editBar.style.display = 'none';
