@@ -473,13 +473,15 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <button class="form-submit secondary" style="margin-top:8px;background:#28a745" onclick="openReport()">📄 查看电子注册备案表</button>
 
   <div class="form-preview" id="formPreview">
-    <div class="form-preview-title">📎 极短离线链接</div>
+    <div class="form-preview-title">🔗 TinyURL 短链接 <span id="shortLinkSpinner" style="font-size:11px;color:#999;font-weight:normal">(缩短中...)</span></div>
     <div class="form-preview-link" id="shortLinkText"></div>
-    <button class="copy-btn" onclick="copyShortLink()">📋 复制</button>
-    <span class="copy-ok" id="copyOk">已复制!</span>
-    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 极短链接 · 跨设备可打开</div>
+    <div id="shortLinkWrap">
+      <button class="copy-btn" onclick="copyShortLink()">📋 复制</button>
+      <span class="copy-ok" id="copyOk">已复制!</span>
+    </div>
+    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 通过 TinyURL 生成 · 极短 · 跨设备可打开</div>
 
-    <div class="form-preview-title" style="margin-top:18px">🔗 完整分享链接</div>
+    <div class="form-preview-title" style="margin-top:18px">📎 原始链接（备选）</div>
     <div class="form-preview-link" id="fullLinkText" style="font-size:10px"></div>
     <button class="copy-btn" onclick="copyFullLink()">📋 复制</button>
     <span class="copy-ok" id="fullCopyOk">已复制!</span>
@@ -654,14 +656,69 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  var shortUrl = getOfflineUrl();
-  var fullUrl = buildShareURL();
-  showShareDialog(shortUrl, fullUrl);
+  var fullUrl = getOfflineUrl();
+  showShareDialog(fullUrl);
+  // 异步缩短链接
+  shortenUrl(fullUrl, function(shortUrl) {
+    document.getElementById('shortLinkText').textContent = shortUrl;
+    document.getElementById('shortLinkSpinner').style.display = 'none';
+    document.getElementById('shortLinkWrap').style.display = '';
+  });
 }
 
-function showShareDialog(shortUrl, fullUrl) {
+// 通过 TinyURL 缩短链接,失败则回退原链接
+function shortenUrl(longUrl, callback) {
+  var encoded = encodeURIComponent(longUrl);
+
+  // 方式1: 直接调用 TinyURL API
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://tinyurl.com/api-create.php?url=' + encoded, true);
+    xhr.timeout = 8000;
+    xhr.onload = function() {
+      if (xhr.status === 200 && xhr.responseText && xhr.responseText.indexOf('http') === 0) {
+        callback(xhr.responseText.trim());
+      } else {
+        tryProxy();
+      }
+    };
+    xhr.onerror = tryProxy;
+    xhr.ontimeout = tryProxy;
+    xhr.send();
+  } catch(e) { tryProxy(); }
+
+  function tryProxy() {
+    // 方式2: 通过 CORS 代理中转
+    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
+      'https://tinyurl.com/api-create.php?url=' + encoded
+    );
+    var pxhr = new XMLHttpRequest();
+    pxhr.open('GET', proxyUrl, true);
+    pxhr.timeout = 10000;
+    pxhr.onload = function() {
+      if (pxhr.status === 200 && pxhr.responseText && pxhr.responseText.indexOf('http') === 0) {
+        callback(pxhr.responseText.trim());
+      } else {
+        fallback();
+      }
+    };
+    pxhr.onerror = fallback;
+    pxhr.ontimeout = fallback;
+    pxhr.send();
+  }
+
+  function fallback() {
+    // 缩短失败,显示原链接
+    callback(longUrl);
+  }
+}
+
+function showShareDialog(fullUrl) {
   var preview = document.getElementById('formPreview');
-  document.getElementById('shortLinkText').textContent = shortUrl;
+  // 先显示加载状态 + 完整链接
+  document.getElementById('shortLinkText').textContent = '⏳ 正在缩短链接...';
+  document.getElementById('shortLinkSpinner').style.display = '';
+  document.getElementById('shortLinkWrap').style.display = 'none';
   document.getElementById('fullLinkText').textContent = fullUrl;
   preview.classList.add('show');
   if (currentPage !== 'pg4') {
@@ -669,7 +726,6 @@ function showShareDialog(shortUrl, fullUrl) {
     populateForm();
   }
   setTimeout(function() {
-    var preview = document.getElementById('formPreview');
     if (preview) preview.scrollIntoView({behavior:'smooth'});
   }, 300);
 }
