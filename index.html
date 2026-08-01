@@ -16,6 +16,7 @@
 <meta property="og:image" content="">
 <!-- URL Scheme 防止微信对短链做额外跳转校验 -->
 <meta name="wechat-enable-text-zoom" content="false">
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <title>学信档案</title>
 <style>
 :root{--primary:#09b37d;--primary-dark:#26ae81;--primary-light:#3fc991;--primary-bg:#e8f5e9;--bg:#f5f5f5;--white:#fff;--text:#333;--text-gray:#999;--text-light:#bbb;--red:#f44336;--orange:#f7c044;--blue:#5985ff;--gray:#aaa}
@@ -525,20 +526,33 @@ function genLocalId(len) {
   return id;
 }
 
-// ========== URL DATA ENCODING ==========
+// ========== URL DATA ENCODING (LZString + base64 fallback) ==========
 function encodeData(obj) {
   var json = JSON.stringify(obj);
-  // Use btoa with unicode handling
+  // 优先使用 LZString 压缩(对含图片数据大幅压缩)
+  if (typeof LZString !== 'undefined' && LZString.compressToEncodedURIComponent) {
+    try {
+      return LZString.compressToEncodedURIComponent(json);
+    } catch(e) {}
+  }
+  // Fallback: base64 URL-safe
   var encoded = btoa(unescape(encodeURIComponent(json)));
-  // Make URL-safe
   return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function decodeData(str) {
+  // 优先尝试 LZString 解压
+  if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+    try {
+      var result = LZString.decompressFromEncodedURIComponent(str);
+      if (result && result.length > 0 && (result[0] === '{' || result[0] === '[')) {
+        return JSON.parse(result);
+      }
+    } catch(e) {}
+  }
+  // Fallback: base64 解码(兼容旧链接)
   try {
-    // Restore from URL-safe
     str = str.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding
     while (str.length % 4) str += '=';
     var json = decodeURIComponent(escape(atob(str)));
     return JSON.parse(json);
@@ -598,19 +612,13 @@ function genShortLinkAndShow() {
 }
 
 function getShortUrl() {
-  // 纯前端方案: s=短码(本设备localStorage) + d=轻量数据(跨设备回退,不含图片)
+  // 纯前端方案: s=短码(本设备localStorage) + d=完整压缩数据(跨设备回退,含图片)
   var id = genLocalId(8);
-  // localStorage 存完整数据(含图片)
   LOCAL_STORE[id] = DATA;
   saveLocalStore();
 
-  // ?d= 参数只传轻量数据(不含大体积图片和敏感信息)
-  var lite = JSON.parse(JSON.stringify(DATA));
-  lite.image_a = '';
-  lite.image_b = '';
-  lite.grad_image_a = '';
-  lite.grad_image_b = '';
-  var encoded = encodeData(lite);
+  // ?d= 参数使用 LZString 压缩,可携带图片,URL大幅缩短
+  var encoded = encodeData(DATA);
   return window.location.origin + window.location.pathname + '?s=' + id + '&d=' + encoded;
 }
 
@@ -855,22 +863,11 @@ function initPg2() {
     gradTab.style.display = '';
     gradTab.textContent = gLevel;
   } else {
-    // No graduate data: show empty states
-    document.getElementById('gradBlockTitle').textContent = '研究生教育';
-    document.getElementById('gradBlockBadge').style.display = 'none';
-    document.getElementById('gradXjCard').style.display = 'none';
-    document.getElementById('gradXlCard').style.display = 'none';
-    document.getElementById('gradXjEmpty').style.display = '';
-    document.getElementById('gradXlEmpty').style.display = '';
-    document.getElementById('gxjSchool').textContent = '--';
-    document.getElementById('gxjDegree').textContent = '--';
-    document.getElementById('gxjMajor').textContent = '--';
-    document.getElementById('gxjType').textContent = '--';
-    document.getElementById('gxlSchool').textContent = '--';
-    document.getElementById('gxlDegree').textContent = '--';
-    document.getElementById('gxlMajor').textContent = '--';
-    document.getElementById('gxlType').textContent = '--';
-    document.getElementById('gradTab').style.display = 'none';
+    // 未填写研究生信息:完全隐藏研究生区块
+    gradBlock.style.display = 'none';
+    // 同时隐藏pg3的研究生tab
+    var gradTab2 = document.getElementById('gradTab');
+    if (gradTab2) gradTab2.style.display = 'none';
   }
 }
 
@@ -1199,8 +1196,11 @@ function collectFormData() {
   d.image_a = getVal('fImgA');
   d.image_b = getVal('fImgB');
 
-  // Graduate
-  var hasGrad = document.getElementById('toggleGrad').classList.contains('open');
+  // Graduate - 仅在填写了学校+专业后才视为有效研究生数据
+  var hasGradToggled = document.getElementById('toggleGrad').classList.contains('open');
+  var gradSchool = getVal('fGSchool');
+  var gradMajor = getVal('fGMajor');
+  var hasGrad = hasGradToggled && !!(gradSchool && gradMajor);
   d.has_grad = hasGrad;
   if (hasGrad) {
     d.grad_level = currentGradType;

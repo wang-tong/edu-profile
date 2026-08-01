@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>教育部学历证书电子注册备案表</title>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
 :root {
   --blue: #1a5f9b;
@@ -111,6 +112,16 @@ body{font-family:"SimSun","宋体",serif;background:var(--bg);min-height:100vh;c
 <script>
 // ========== DATA DECODE ==========
 function decodeData(str) {
+  // 优先尝试 LZString 解压(新链接)
+  if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+    try {
+      var result = LZString.decompressFromEncodedURIComponent(str);
+      if (result && result.length > 0 && (result[0] === '{' || result[0] === '[')) {
+        return JSON.parse(result);
+      }
+    } catch(e) {}
+  }
+  // Fallback: base64 解码(兼容旧链接)
   try {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (str.length % 4) str += '=';
