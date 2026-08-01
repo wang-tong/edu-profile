@@ -464,13 +464,17 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <button class="form-submit secondary" style="margin-top:8px;background:#28a745" onclick="openReport()">📄 查看电子注册备案表</button>
 
   <div class="form-preview" id="formPreview">
-    <div class="form-preview-title">📎 分享链接</div>
+    <div class="form-preview-title">📎 分享链接 <span id="shortBadge" style="display:none;color:#09b37d;font-size:12px">✨短链接</span></div>
     <div class="form-preview-link" id="shareLinkText"></div>
     <button class="copy-btn" onclick="copyShareLink()">📋 复制链接</button>
     <span class="copy-ok" id="copyOk">已复制!</span>
+    <div class="short-loading" id="shortLoading" style="display:none;margin-top:8px;font-size:12px;color:#666">⏳ 正在生成短链接...</div>
+    <div class="short-info" id="shortInfo" style="display:none;margin-top:8px;font-size:11px;color:#666;word-break:break-all">
+      📌 原始链接: <span id="origLinkText"></span>
+    </div>
     <div style="margin-top:10px;font-size:11px;color:#999;line-height:1.6">
-      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可在微信内置浏览器中打开.<br>
-      ⚠️ 如链接过长被截断,请减少填写内容(尤其是图片URL).
+      💡 <b>微信打开:</b>复制<b>短链接</b>到微信发送,可直接点击打开.<br>
+      ⚠️ 如短链接失效,请复制上方原始链接在浏览器中打开.
     </div>
   </div>
 </div>
@@ -505,206 +509,26 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== LZW COMPRESSION on UTF-8 bytes ==========
-var LZUTF8 = (function() {
-  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~";
-  var R64 = {}; for (var i = 0; i < B64.length; i++) R64[B64[i]] = i;
-
-  // JS string -> UTF-8 byte array
-  function strToUTF8(s) {
-    var bytes = [];
-    for (var i = 0; i < s.length; i++) {
-      var c = s.charCodeAt(i);
-      if (c < 0x80) bytes.push(c);
-      else if (c < 0x800) { bytes.push(0xC0 | (c >>> 6)); bytes.push(0x80 | (c & 0x3F)); }
-      else if (c < 0xD800 || c >= 0xE000) { bytes.push(0xE0 | (c >>> 12)); bytes.push(0x80 | ((c >>> 6) & 0x3F)); bytes.push(0x80 | (c & 0x3F)); }
-      else { var d = s.charCodeAt(i+1); var cp = 0x10000 + ((c - 0xD800) << 10) + (d - 0xDC00); i++; bytes.push(0xF0 | (cp >>> 18)); bytes.push(0x80 | ((cp >>> 12) & 0x3F)); bytes.push(0x80 | ((cp >>> 6) & 0x3F)); bytes.push(0x80 | (cp & 0x3F)); }
-    }
-    return bytes;
-  }
-
-  // UTF-8 byte array -> JS string
-  function utf8ToStr(bytes) {
-    var s = '';
-    for (var i = 0; i < bytes.length; i++) {
-      var b = bytes[i];
-      var cp, n;
-      if (b < 0x80) { cp = b; n = 0; }
-      else if ((b & 0xE0) === 0xC0) { cp = (b & 0x1F) << 6 | (bytes[i+1] & 0x3F); n = 1; }
-      else if ((b & 0xF0) === 0xE0) { cp = (b & 0x0F) << 12 | (bytes[i+1] & 0x3F) << 6 | (bytes[i+2] & 0x3F); n = 2; }
-      else { cp = (b & 0x07) << 18 | (bytes[i+1] & 0x3F) << 12 | (bytes[i+2] & 0x3F) << 6 | (bytes[i+3] & 0x3F); n = 3; }
-      s += String.fromCharCode(cp); i += n;
-    }
-    return s;
-  }
-
-  // LZW compress byte array -> array of 16-bit codes
-  function lzwEncode(bytes) {
-    if (bytes.length === 0) return [];
-    var dict = {}, dictSize = 256;
-    for (var i = 0; i < 256; i++) dict[String.fromCharCode(i)] = i;
-    var w = '', res = [];
-    for (var i = 0; i < bytes.length; i++) {
-      var c = String.fromCharCode(bytes[i]);
-      var wc = w + c;
-      if (wc in dict) { w = wc; }
-      else {
-        res.push(dict[w]);
-        if (dictSize < 65536) dict[wc] = dictSize++;
-        w = c;
-      }
-    }
-    if (w !== '') res.push(dict[w]);
-    return res;
-  }
-
-  // LZW decompress 16-bit codes -> byte array
-  function lzwDecode(codes) {
-    if (codes.length === 0) return [];
-    var dictSize = 256, dict = [];
-    for (var i = 0; i < 256; i++) dict.push(String.fromCharCode(i));
-    var w = String.fromCharCode(codes[0]);
-    var bytes = [codes[0]];
-    for (var i = 1; i < codes.length; i++) {
-      var entry;
-      var code = codes[i];
-      if (code < dictSize) entry = dict[code];
-      else if (code === dictSize) entry = w + w.charAt(0);
-      else return bytes;
-      for (var j = 0; j < entry.length; j++) bytes.push(entry.charCodeAt(j));
-      dict.push(w + entry.charAt(0));
-      dictSize++;
-      w = entry;
-    }
-    return bytes;
-  }
-
-  return {
-    compress: function(str) {
-      if (!str) return '';
-      var bytes = strToUTF8(str);
-      var codes = lzwEncode(bytes);
-      // Pack 16-bit codes into 6-bit chunks
-      var bits = 0, bitLen = 0, out = '';
-      for (var i = 0; i < codes.length; i++) {
-        bits = (bits << 16) | codes[i];
-        bitLen += 16;
-        while (bitLen >= 6) {
-          out += B64.charAt((bits >>> (bitLen - 6)) & 63);
-          bitLen -= 6;
-        }
-      }
-      if (bitLen > 0) out += B64.charAt((bits << (6 - bitLen)) & 63);
-      return out;
-    },
-    decompress: function(input) {
-      if (!input) return '';
-      // Unpack 6-bit chunks to 16-bit codes
-      var bits = 0, bitLen = 0, codes = [];
-      for (var i = 0; i < input.length; i++) {
-        bits = (bits << 6) | R64[input[i]];
-        bitLen += 6;
-        while (bitLen >= 16) {
-          codes.push((bits >>> (bitLen - 16)) & 0xFFFF);
-          bitLen -= 16;
-        }
-      }
-      // LZW decode
-      var bytes = lzwDecode(codes);
-      return utf8ToStr(bytes);
-    }
-  };
-})();
-
-// ========== URL DATA ENCODING (short keys + LZW) ==========
-var KEY_MAP = {
-  name:'n', gender:'g', nation:'nt',
-  school:'s', major:'m', xltype:'x', academic_qualification:'aq',
-  educational_system:'es', xllb:'xb', fenyuan:'fy', xisuo:'xs',
-  banji:'bj', xuehao:'xh', zhuangtai:'z',
-  ru_nian:'rn', ru_yue:'ry', ru_ri:'rr',
-  li_nian:'ln', li_yue:'ly', li_ri:'lr',
-  nian:'na', yue:'ye', ri:'ri',
-  image_a:'ia', image_b:'ib',
-  has_grad:'hg', grad_level:'gl',
-  grad_school:'gs', grad_major:'gm', grad_degree_type:'gt',
-  grad_educational_system:'ge', grad_enroll_type:'gp', grad_train_mode:'gm2',
-  grad_research:'gr', grad_supervisor:'gv',
-  grad_fenyuan:'gf', grad_xuehao:'gx', grad_zhuangtai:'gz',
-  grad_ru_nian:'gn', grad_ru_yue:'gy', grad_ru_ri:'gd',
-  grad_li_nian:'hn', grad_li_yue:'hy', grad_li_ri:'hd',
-  grad_image_a:'ga', grad_image_b:'gb'
-};
-var REV_MAP = {}; for (var k in KEY_MAP) REV_MAP[KEY_MAP[k]] = k;
-
-// Image fields that contain data URL prefixes — strip them before compression
-var IMG_FIELDS = ['ia','ib','ga','gb'];
-var IMG_PREFIX = /^data:image\/\w+;base64,/;
-
-// Convert stored image format to usable src (handles j:/w:/data:/http: prefixes)
-function toImgSrc(v) {
-  if (!v) return v;
-  if (v.startsWith('data:') || v.startsWith('http')) return v;
-  if (v.charAt(1) === ':') {
-    var fmt = v.charAt(0) === 'w' ? 'webp' : 'jpeg';
-    return 'data:image/' + fmt + ';base64,' + v.substring(2);
-  }
-  return v;
-}
-
-function shrinkKeys(obj) {
-  var o = {};
-  for (var k in obj) {
-    if (!obj.hasOwnProperty(k)) continue;
-    var v = obj[k];
-    var sk = KEY_MAP[k] || k;
-    // Strip data URL prefix from image values to save space
-    if (IMG_FIELDS.indexOf(sk) >= 0 && typeof v === 'string') {
-      v = v.replace(IMG_PREFIX, '');
-    }
-    o[sk] = v;
-  }
-  return o;
-}
-function expandKeys(obj) {
-  var o = {};
-  for (var k in obj) {
-    if (!obj.hasOwnProperty(k)) continue;
-    var ek = REV_MAP[k] || k;
-    var v = obj[k];
-    // Add back data URL prefix for image fields
-    if (IMG_FIELDS.indexOf(k) >= 0 && typeof v === 'string' && v.length > 4 && !v.startsWith('data:') && !v.startsWith('http')) {
-      if (v.charAt(1) === ':') {
-        // New format with type prefix: "w:base64..." or "j:base64..."
-        v = 'data:image/' + (v.charAt(0) === 'w' ? 'webp' : 'jpeg') + ';base64,' + v.substring(2);
-      } else if (v.indexOf('jpeg') < 0 && v.indexOf('webp') < 0) {
-        // Old format: raw base64 without prefix, assume JPEG
-        v = 'data:image/jpeg;base64,' + v;
-      }
-    }
-    o[ek] = v;
-  }
-  return o;
-}
-
+// ========== URL DATA ENCODING ==========
 function encodeData(obj) {
-  return LZUTF8.compress(JSON.stringify(shrinkKeys(obj)));
+  var json = JSON.stringify(obj);
+  // Use btoa with unicode handling
+  var encoded = btoa(unescape(encodeURIComponent(json)));
+  // Make URL-safe
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function decodeData(str) {
-  // Try new LZUTF8 format first
   try {
-    var json = LZUTF8.decompress(str);
-    if (json && json.length > 4) return expandKeys(JSON.parse(json));
-  } catch(e) {}
-  // Fallback to old base64 format
-  try {
+    // Restore from URL-safe
     str = str.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding
     while (str.length % 4) str += '=';
-    var json2 = decodeURIComponent(escape(atob(str)));
-    if (json2) return expandKeys(JSON.parse(json2));
-  } catch(e) {}
-  return null;
+    var json = decodeURIComponent(escape(atob(str)));
+    return JSON.parse(json);
+  } catch(e) {
+    return null;
+  }
 }
 
 function loadDataFromURL() {
@@ -718,51 +542,118 @@ function loadDataFromURL() {
   if (d && d.length > 4) {
     var data = decodeData(d);
     if (data) {
-      console.log('[app] 从URL加载数据成功');
-      return data;
+      console.log('[app] 从URL加载数据成功,字段数=' + Object.keys(data).length);
+      // 合并默认值(兼容紧凑编码,缺失字段自动补齐)
+      var merged = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      for (var k in data) { merged[k] = data[k]; }
+      return merged;
     }
   }
   return null;
 }
 
-// 微信可打开的域名(Cloudflare隧道,不会被微信屏蔽)
-var WX_DOMAIN = 'https://relevant-merry-swaziland-contribute.trycloudflare.com';
+// 紧凑编码：排除空值和与默认值相同的字段，大幅缩短链接
+function compactEncode(obj) {
+  var compact = {};
+  for (var key in obj) {
+    var val = obj[key];
+    var def = DEFAULT_DATA[key];
+    // 永远保留 has_grad（判断逻辑需要）
+    if (key === 'has_grad') { compact[key] = val; continue; }
+    // 跳过空值
+    if (val === '' || val === undefined || val === null) continue;
+    // 跳过与默认值相同的字段
+    if (def !== undefined && val === def) continue;
+    compact[key] = val;
+  }
+  return encodeData(compact);
+}
 
-function buildShareURL() {
-  var encoded = encodeData(DATA);
-  var base = window.location.host.indexOf('trycloudflare.com') > 0
-    ? window.location.origin
-    : WX_DOMAIN;
-  var url = base + '/?d=' + encoded;
+function buildShareURL(useCompact) {
+  var encoded = useCompact ? compactEncode(DATA) : encodeData(DATA);
+  var url = window.location.origin + window.location.pathname + '?d=' + encoded;
   return url;
 }
 
 function genShareLink() {
-  var url = buildShareURL();
+  var url = buildShareURL(true);
   showShareDialog(url);
+  generateShortLink(url);
 }
 
 function openReport() {
-  var url = buildShareURL();
+  var url = buildShareURL(true);
   window.open('report.html?d=' + url.split('?d=')[1], '_blank');
 }
 
 function showShareDialog(url) {
   var preview = document.getElementById('formPreview');
   document.getElementById('shareLinkText').textContent = url;
+  document.getElementById('shortBadge').style.display = 'none';
+  document.getElementById('shortInfo').style.display = 'none';
+  document.getElementById('shortLoading').style.display = 'none';
   preview.classList.add('show');
-  // Also scroll to the share section on pg4, or show it wherever
-  // On pg1, navigate to pg4
   if (currentPage !== 'pg4') {
     navTo('pg4');
-    // Populate form from DATA first
     populateForm();
   }
   setTimeout(function() {
-    // Scroll the preview into view
-    var preview = document.getElementById('formPreview');
-    if (preview) preview.scrollIntoView({behavior:'smooth'});
+    var p = document.getElementById('formPreview');
+    if (p) p.scrollIntoView({behavior:'smooth'});
   }, 300);
+}
+
+// 调用短链接API，支持多个服务fallback
+function shortenURL(longUrl, callback) {
+  // 主方案: cleanuri.com (支持CORS, 免费)
+  var req = new XMLHttpRequest();
+  req.open('POST', 'https://cleanuri.com/api/v1/shorten', true);
+  req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  req.onload = function() {
+    try {
+      var data = JSON.parse(req.responseText);
+      if (data && data.result_url) return callback(null, data.result_url);
+    } catch(e) {}
+    tryFallback2();
+  };
+  req.onerror = function() { tryFallback2(); };
+  req.send('url=' + encodeURIComponent(longUrl));
+
+  // 备用方案: is.gd (GET接口)
+  function tryFallback2() {
+    var r2 = new XMLHttpRequest();
+    r2.open('GET', 'https://is.gd/create.php?format=simple&url=' + encodeURIComponent(longUrl), true);
+    r2.onload = function() {
+      var text = r2.responseText.trim();
+      if (text && text.indexOf('http') === 0) {
+        callback(null, text);
+      } else {
+        callback('all failed', null);
+      }
+    };
+    r2.onerror = function() { callback('all failed', null); };
+    r2.send();
+  }
+}
+
+// 异步生成短链接，更新UI
+function generateShortLink(longUrl) {
+  var loading = document.getElementById('shortLoading');
+  loading.style.display = '';
+  shortenURL(longUrl, function(err, shortUrl) {
+    loading.style.display = 'none';
+    if (shortUrl) {
+      document.getElementById('shareLinkText').textContent = shortUrl;
+      document.getElementById('shortBadge').style.display = '';
+      document.getElementById('shortInfo').style.display = '';
+      document.getElementById('origLinkText').textContent = longUrl;
+      toast('短链接已生成');
+    } else {
+      document.getElementById('shortInfo').style.display = '';
+      document.getElementById('origLinkText').textContent = longUrl;
+      toast('短链接生成失败,请复制下方链接');
+    }
+  });
 }
 
 function copyShareLink() {
@@ -890,8 +781,8 @@ function handleImgUpload(inputEl, targetId) {
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
-      // 压缩到极小缩略图(减少链接长度,仅用于头像预览)
-      var maxW = 80, maxH = 96;
+      // 压缩到缩略图大小(最大200px宽,高质量JPEG)
+      var maxW = 200, maxH = 240;
       var w = img.width, h = img.height;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
@@ -899,28 +790,10 @@ function handleImgUpload(inputEl, targetId) {
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
-      // 灰度图大幅减少数据量 (去掉2/3色彩通道)
-      ctx.filter = 'grayscale(1) blur(0.3px)';
       ctx.drawImage(img, 0, 0, w, h);
-      ctx.filter = 'none';
+      var base64 = canvas.toDataURL('image/jpeg', 0.75);
 
-      // 优先 WebP (体积更小), 不支持则回退 JPEG
-      var isWebP = false;
-      try {
-        var test = canvas.toDataURL('image/webp', 0.01);
-        isWebP = test.indexOf('image/webp') > 0;
-      } catch(e) {}
-      var fmt, raw;
-      if (isWebP) {
-        raw = canvas.toDataURL('image/webp', 0.2);
-        fmt = 'w';
-      } else {
-        raw = canvas.toDataURL('image/jpeg', 0.2);
-        fmt = 'j';
-      }
-      // 剥离 data:image/xxx;base64, 前缀,只保留格式标记+净数据
-      raw = raw.replace(/^data:image\/\w+;base64,/, '');
-      target.value = fmt + ':' + raw;
+      target.value = base64;
       target.style.color = '#09b37d';
       toast('照片已导入!');
     };
@@ -1153,13 +1026,13 @@ function initPg3() {
 
   // Photos
   if (imgA) {
-    document.getElementById('admImg').src = toImgSrc(imgA);
+    document.getElementById('admImg').src = imgA;
     document.getElementById('admImg').style.display = 'block';
   } else {
     document.getElementById('admImg').style.display = 'none';
   }
   if (imgB) {
-    document.getElementById('degImg').src = toImgSrc(imgB);
+    document.getElementById('degImg').src = imgB;
     document.getElementById('degImg').style.display = 'block';
   } else {
     document.getElementById('degImg').style.display = 'none';
@@ -1366,34 +1239,28 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  var url = buildShareURL();
+  var url = buildShareURL(true);
 
-  // Show share dialog
-  var preview = document.getElementById('formPreview');
-  document.getElementById('shareLinkText').textContent = url;
-  preview.classList.add('show');
-  preview.scrollIntoView({behavior: 'smooth'});
+  showShareDialog(url);
 
-  // Update current URL without reload
+  // Update browser URL with compact encoding
   try {
-    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
+    var newUrl = window.location.origin + window.location.pathname + '?d=' + compactEncode(DATA);
     window.history.replaceState({}, '', newUrl);
   } catch(e) {}
 
-  // 链接长度检查(微信内置浏览器建议控制在6000字符以内)
-  if (url.length > 6000) {
-    toast('⚠️ 链接较长(' + url.length + '字符),微信可能截断,建议少填图片URL');
-  } else {
-    toast('信息已保存,链接已生成!');
-  }
+  // 异步生成短链接
+  generateShortLink(url);
+
+  toast('信息已保存,正在生成短链接...');
 }
 
 function submitAndPreview() {
   DATA = collectFormData();
 
-  // Update URL
+  // Update URL with compact encoding
   try {
-    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
+    var newUrl = window.location.origin + window.location.pathname + '?d=' + compactEncode(DATA);
     window.history.replaceState({}, '', newUrl);
   } catch(e) {}
 
