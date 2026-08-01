@@ -406,7 +406,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="toggle-section" id="toggleGrad">
     <div class="toggle-header" onclick="toggleGradSection()">
       <div class="toggle-header-left">
-        <span class="toggle-title">📚 研究生信息 (可选)</span>
+        <span class="toggle-title" id="gradToggleTitle">📚 硕士研究生信息 (可选)</span>
         <span class="toggle-hint">点击展开填写</span>
       </div>
       <span class="toggle-arrow">▶</span>
@@ -1074,6 +1074,9 @@ function switchGradTypeUI(type) {
       t.classList.remove('active');
     }
   });
+  // Update toggle title
+  var toggleTitle = document.getElementById('gradToggleTitle');
+  if (toggleTitle) toggleTitle.textContent = '📚 ' + type + '研究生信息 (可选)';
 }
 
 function collectFormData() {
