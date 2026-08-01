@@ -477,7 +477,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
     <div class="form-preview-link" id="shortLinkText"></div>
     <button class="copy-btn" onclick="copyShortLink()">📋 复制</button>
     <span class="copy-ok" id="copyOk">已复制!</span>
-    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 极短 · 仅本设备可打开 · 支持离线</div>
+    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 极短链接 · 跨设备可打开</div>
 
     <div class="form-preview-title" style="margin-top:18px">🔗 完整分享链接</div>
     <div class="form-preview-link" id="fullLinkText" style="font-size:10px;word-break:break-all"></div>
@@ -618,11 +618,12 @@ function buildShareURL() {
 }
 
 function getOfflineUrl() {
-  // 极短离线链接:仅需ID,数据在localStorage
+  // 极短链接:ID+压缩数据,跨设备可用
   var id = genLocalId(8);
   LOCAL_STORE[id] = DATA;
   saveLocalStore();
-  return window.location.origin + window.location.pathname + '?q=' + id;
+  var encoded = encodeData(DATA);
+  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
 }
 
 function genShareLink() {
