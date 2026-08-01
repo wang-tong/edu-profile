@@ -1,0 +1,6 @@
+{
+  "name": "edu-profile",
+  "dependencies": {
+    "@netlify/blobs": "^7.0.0"
+  }
+}
