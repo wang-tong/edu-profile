@@ -641,6 +641,17 @@ var REV_MAP = {}; for (var k in KEY_MAP) REV_MAP[KEY_MAP[k]] = k;
 var IMG_FIELDS = ['ia','ib','ga','gb'];
 var IMG_PREFIX = /^data:image\/\w+;base64,/;
 
+// Convert stored image format to usable src (handles j:/w:/data:/http: prefixes)
+function toImgSrc(v) {
+  if (!v) return v;
+  if (v.startsWith('data:') || v.startsWith('http')) return v;
+  if (v.charAt(1) === ':') {
+    var fmt = v.charAt(0) === 'w' ? 'webp' : 'jpeg';
+    return 'data:image/' + fmt + ';base64,' + v.substring(2);
+  }
+  return v;
+}
+
 function shrinkKeys(obj) {
   var o = {};
   for (var k in obj) {
@@ -662,8 +673,14 @@ function expandKeys(obj) {
     var ek = REV_MAP[k] || k;
     var v = obj[k];
     // Add back data URL prefix for image fields
-    if (IMG_FIELDS.indexOf(k) >= 0 && typeof v === 'string' && v.length > 10 && !v.startsWith('data:')) {
-      v = 'data:image/jpeg;base64,' + v;
+    if (IMG_FIELDS.indexOf(k) >= 0 && typeof v === 'string' && v.length > 4 && !v.startsWith('data:') && !v.startsWith('http')) {
+      if (v.charAt(1) === ':') {
+        // New format with type prefix: "w:base64..." or "j:base64..."
+        v = 'data:image/' + (v.charAt(0) === 'w' ? 'webp' : 'jpeg') + ';base64,' + v.substring(2);
+      } else if (v.indexOf('jpeg') < 0 && v.indexOf('webp') < 0) {
+        // Old format: raw base64 without prefix, assume JPEG
+        v = 'data:image/jpeg;base64,' + v;
+      }
     }
     o[ek] = v;
   }
@@ -876,13 +893,28 @@ function handleImgUpload(inputEl, targetId) {
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
-      // 轻微模糊消除高频细节,进一步减小JPEG体积
-      ctx.filter = 'blur(0.3px)';
+      // 灰度图大幅减少数据量 (去掉2/3色彩通道)
+      ctx.filter = 'grayscale(1) blur(0.3px)';
       ctx.drawImage(img, 0, 0, w, h);
       ctx.filter = 'none';
-      var base64 = canvas.toDataURL('image/jpeg', 0.35);
 
-      target.value = base64;
+      // 优先 WebP (体积更小), 不支持则回退 JPEG
+      var isWebP = false;
+      try {
+        var test = canvas.toDataURL('image/webp', 0.01);
+        isWebP = test.indexOf('image/webp') > 0;
+      } catch(e) {}
+      var fmt, raw;
+      if (isWebP) {
+        raw = canvas.toDataURL('image/webp', 0.2);
+        fmt = 'w';
+      } else {
+        raw = canvas.toDataURL('image/jpeg', 0.2);
+        fmt = 'j';
+      }
+      // 剥离 data:image/xxx;base64, 前缀，只保留格式标记+净数据
+      raw = raw.replace(/^data:image\/\w+;base64,/, '');
+      target.value = fmt + ':' + raw;
       target.style.color = '#09b37d';
       toast('照片已导入!');
     };
@@ -1115,13 +1147,13 @@ function initPg3() {
 
   // Photos
   if (imgA) {
-    document.getElementById('admImg').src = imgA;
+    document.getElementById('admImg').src = toImgSrc(imgA);
     document.getElementById('admImg').style.display = 'block';
   } else {
     document.getElementById('admImg').style.display = 'none';
   }
   if (imgB) {
-    document.getElementById('degImg').src = imgB;
+    document.getElementById('degImg').src = toImgSrc(imgB);
     document.getElementById('degImg').style.display = 'block';
   } else {
     document.getElementById('degImg').style.display = 'none';

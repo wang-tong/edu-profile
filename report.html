@@ -192,8 +192,14 @@ function expandKeys(obj) {
     var ek = REV_MAP[k] || k;
     var v = obj[k];
     // Add back data URL prefix for image fields that are raw base64
-    if (IMG_FIELDS2.indexOf(k) >= 0 && typeof v === 'string' && v.length > 10 && !v.startsWith('data:')) {
-      v = 'data:image/jpeg;base64,' + v;
+    if (IMG_FIELDS2.indexOf(k) >= 0 && typeof v === 'string' && v.length > 4 && !v.startsWith('data:') && !v.startsWith('http')) {
+      if (v.charAt(1) === ':') {
+        // New format with type prefix: "w:base64..." or "j:base64..."
+        v = 'data:image/' + (v.charAt(0) === 'w' ? 'webp' : 'jpeg') + ';base64,' + v.substring(2);
+      } else if (v.indexOf('jpeg') < 0 && v.indexOf('webp') < 0) {
+        // Old format: raw base64 without prefix, assume JPEG
+        v = 'data:image/jpeg;base64,' + v;
+      }
     }
     o[ek] = v;
   }
