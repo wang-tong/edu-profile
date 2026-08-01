@@ -468,11 +468,9 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
     <div class="form-preview-link" id="shareLinkText"></div>
     <button class="copy-btn" onclick="copyShareLink()">📋 复制链接</button>
     <span class="copy-ok" id="copyOk">已复制!</span>
-    <div style="margin-top:10px;font-size:11px;color:#09b37d;line-height:1.6">
-      ✅ 链接已压缩，直接复制到微信发送，对方点击即可打开。
-    </div>
-    <div style="margin-top:6px;font-size:11px;color:#999;line-height:1.6">
-      💡 如链接过长被截断，建议减少填写内容（尤其是照片改用外部图床链接）。
+    <div style="margin-top:10px;font-size:11px;color:#999;line-height:1.6">
+      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可在微信内置浏览器中打开.<br>
+      ⚠️ 如链接过长被截断,请减少填写内容(尤其是图片URL).
     </div>
   </div>
 </div>
@@ -510,13 +508,17 @@ var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 // ========== URL DATA ENCODING ==========
 function encodeData(obj) {
   var json = JSON.stringify(obj);
+  // Use btoa with unicode handling
   var encoded = btoa(unescape(encodeURIComponent(json)));
+  // Make URL-safe
   return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function decodeData(str) {
   try {
+    // Restore from URL-safe
     str = str.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding
     while (str.length % 4) str += '=';
     var json = decodeURIComponent(escape(atob(str)));
     return JSON.parse(json);
@@ -527,110 +529,54 @@ function decodeData(str) {
 
 function loadDataFromURL() {
   var params = new URLSearchParams(window.location.search);
-  // 优先读 ?s= (新格式，短参数名)，然后 ?d= (旧格式)
-  var encoded = params.get('s') || params.get('d');
-  if (!encoded) {
+  var d = params.get('d');
+  if (!d) {
     var hash = window.location.hash;
-    var m = hash.match(/[?&][sd]=([^&]+)/);
-    if (m) encoded = m[1];
+    var m = hash.match(/[?&]d=([^&]+)/);
+    if (m) d = m[1];
   }
-  if (encoded && encoded.length > 4) {
-    var data = decodeData(encoded);
+  if (d && d.length > 4) {
+    var data = decodeData(d);
     if (data) {
-      console.log('[app] 从URL加载数据成功,字段数=' + Object.keys(data).length);
-      var merged = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      for (var k in data) { merged[k] = data[k]; }
-      return merged;
+      console.log('[app] 从URL加载数据成功');
+      return data;
     }
   }
   return null;
 }
 
-// 紧凑编码：排除空值和与默认值相同的字段，大幅缩短链接
-function compactEncode(obj) {
-  var compact = {};
-  for (var key in obj) {
-    var val = obj[key];
-    var def = DEFAULT_DATA[key];
-    // 永远保留 has_grad（判断逻辑需要）
-    if (key === 'has_grad') { compact[key] = val; continue; }
-    // 跳过空值
-    if (val === '' || val === undefined || val === null) continue;
-    // 跳过与默认值相同的字段
-    if (def !== undefined && val === def) continue;
-    compact[key] = val;
-  }
-  return encodeData(compact);
-}
-
-function buildShareURL(useCompact) {
-  var encoded = useCompact ? compactEncode(DATA) : encodeData(DATA);
-  var url = window.location.origin + window.location.pathname + '?s=' + encoded;
+function buildShareURL() {
+  var encoded = encodeData(DATA);
+  var url = window.location.origin + window.location.pathname + '?d=' + encoded;
   return url;
 }
 
 function genShareLink() {
-  var url = buildShareURL(true);
+  var url = buildShareURL();
   showShareDialog(url);
-  toast('✅ 链接已生成，可直接复制到微信打开');
 }
 
 function openReport() {
-  var url = buildShareURL(true);
-  window.open('report.html?s=' + url.split('?s=')[1], '_blank');
+  var url = buildShareURL();
+  window.open('report.html?d=' + url.split('?d=')[1], '_blank');
 }
 
 function showShareDialog(url) {
   var preview = document.getElementById('formPreview');
   document.getElementById('shareLinkText').textContent = url;
   preview.classList.add('show');
+  // Also scroll to the share section on pg4, or show it wherever
+  // On pg1, navigate to pg4
   if (currentPage !== 'pg4') {
     navTo('pg4');
+    // Populate form from DATA first
     populateForm();
   }
   setTimeout(function() {
-    var p = document.getElementById('formPreview');
-    if (p) p.scrollIntoView({behavior:'smooth'});
+    // Scroll the preview into view
+    var preview = document.getElementById('formPreview');
+    if (preview) preview.scrollIntoView({behavior:'smooth'});
   }, 300);
-}
-
-// 调用同域短链接API (Netlify Function代理, 无CORS问题)
-function shortenURL(longUrl, callback) {
-  var req = new XMLHttpRequest();
-  req.open('GET', '/api/shorten?url=' + encodeURIComponent(longUrl), true);
-  req.timeout = 8000;
-  req.onload = function() {
-    try {
-      var data = JSON.parse(req.responseText);
-      if (data && data.short_url && data.service !== 'none') {
-        return callback(null, data.short_url);
-      }
-    } catch(e) {}
-    callback('shorten failed', null);
-  };
-  req.onerror = function() { callback('network error', null); };
-  req.ontimeout = function() { callback('timeout', null); };
-  req.send();
-}
-
-// 异步生成短链接，更新UI
-function generateShortLink(longUrl) {
-  var loading = document.getElementById('shortLoading');
-  loading.style.display = '';
-  shortenURL(longUrl, function(err, shortUrl) {
-    loading.style.display = 'none';
-    if (shortUrl) {
-      document.getElementById('shareLinkText').textContent = shortUrl;
-      document.getElementById('shortBadge').style.display = '';
-      document.getElementById('shortInfo').style.display = '';
-      document.getElementById('origLinkText').textContent = longUrl;
-      toast('短链接已生成');
-    } else {
-      document.getElementById('shortInfo').style.display = '';
-      document.getElementById('origLinkText').textContent = longUrl;
-      toast('短链接生成失败,请复制下方链接');
-    }
-  });
 }
 
 function copyShareLink() {
@@ -781,7 +727,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!(params.get('d') || params.get('s'));
+  return !!params.get('d');
 }
 
 // ========== INIT PG2 ==========
@@ -817,9 +763,7 @@ function initPg2() {
     document.getElementById('xlDegree').textContent = '--';
     document.getElementById('xlMajor').textContent = '--';
     document.getElementById('xlType').textContent = '--';
-    var emptyText = isFromShareLink() ? '暂无数据' : ('请先填写' + shortLabel + '信息');
-    var emptyLink = isFromShareLink() ? '' : ('<span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>');
-    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">' + emptyText + '</span>' + emptyLink;
+    document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">请先填写' + shortLabel + '信息</span><span class="empty-link" onclick="navTo(\'pg4\')">去填写</span>';
   }
 
   // Graduate cards
@@ -855,11 +799,6 @@ function initPg2() {
     gradBlock.style.display = 'none';
     document.getElementById('gradTab').style.display = 'none';
   }
-  // 分享链接模式下隐藏尝试绑定等操作入口
-  var bindActions = document.querySelectorAll('.sect-action');
-  bindActions.forEach(function(el) {
-    if (isFromShareLink()) el.style.display = 'none';
-  });
 }
 
 // ========== INIT PG3 ==========
@@ -1223,23 +1162,34 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  var url = buildShareURL(true);
-  showShareDialog(url);
+  var url = buildShareURL();
 
-  // 更新浏览器URL
+  // Show share dialog
+  var preview = document.getElementById('formPreview');
+  document.getElementById('shareLinkText').textContent = url;
+  preview.classList.add('show');
+  preview.scrollIntoView({behavior: 'smooth'});
+
+  // Update current URL without reload
   try {
-    window.history.replaceState({}, '', url);
+    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
+    window.history.replaceState({}, '', newUrl);
   } catch(e) {}
 
-  toast('✅ 信息已保存，链接可直接在微信打开');
+  // 链接长度检查(微信内置浏览器建议控制在6000字符以内)
+  if (url.length > 6000) {
+    toast('⚠️ 链接较长(' + url.length + '字符),微信可能截断,建议少填图片URL');
+  } else {
+    toast('信息已保存,链接已生成!');
+  }
 }
 
 function submitAndPreview() {
   DATA = collectFormData();
 
-  // Update URL with compact encoding
+  // Update URL
   try {
-    var newUrl = window.location.origin + window.location.pathname + '?s=' + compactEncode(DATA);
+    var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
     window.history.replaceState({}, '', newUrl);
   } catch(e) {}
 
