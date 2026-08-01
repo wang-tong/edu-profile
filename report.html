@@ -131,22 +131,9 @@ function getUrlParam(key) {
   return m ? decodeURIComponent(m[1]) : '';
 }
 
-// Load data from URL
-var encoded = getUrlParam('d');
-var shortId = getUrlParam('s');
+// Load data from URL (支持 ?s= 新格式 和 ?d= 旧格式)
+var encoded = getUrlParam('s') || getUrlParam('d');
 var data = encoded ? decodeData(encoded) : null;
-
-// 如果有短ID，异步从服务端加载
-if (!data && shortId) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/api/store?id=' + encodeURIComponent(shortId), false); // 同步请求
-  xhr.timeout = 5000;
-  try {
-    xhr.send();
-    var resp = JSON.parse(xhr.responseText);
-    if (resp && !resp.error) data = resp;
-  } catch(e) { console.log('load from server failed:', e); }
-}
 
 function hasInfo(d) {
   return !!(d && d.name && d.school);
