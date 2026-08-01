@@ -576,14 +576,19 @@ function genShareLink() {
 }
 
 function openReport() {
-  // 备案表优先使用短链接
-  var sParam = new URLSearchParams(window.location.search).get('s');
-  if (sParam) {
-    window.open('report.html?s=' + sParam, '_blank');
-    return;
+  // 备案表: 同时传 s= 和 d= (s=本设备优先, d=跨设备回退)
+  var params = new URLSearchParams(window.location.search);
+  var sParam = params.get('s');
+  var dParam = params.get('d');
+  var reportUrl = 'report.html';
+  if (sParam && dParam) {
+    reportUrl += '?s=' + sParam + '&d=' + dParam;
+  } else if (dParam) {
+    reportUrl += '?d=' + dParam;
+  } else if (sParam) {
+    reportUrl += '?s=' + sParam;
   }
-  var url = buildShareURL();
-  window.open('report.html?d=' + url.split('?d=')[1], '_blank');
+  window.open(reportUrl, '_blank');
 }
 
 function genShortLinkAndShow() {
@@ -593,11 +598,12 @@ function genShortLinkAndShow() {
 }
 
 function getShortUrl() {
-  // 纯前端方案: 数据存 localStorage,URL 只用短码
+  // 纯前端方案: s=短码(本设备localStorage) + d=完整数据(跨设备回退)
   var id = genLocalId(8);
   LOCAL_STORE[id] = DATA;
   saveLocalStore();
-  return window.location.origin + window.location.pathname + '?s=' + id;
+  var encoded = encodeData(DATA);
+  return window.location.origin + window.location.pathname + '?s=' + id + '&d=' + encoded;
 }
 
 function showShareDialog(url) {
@@ -1219,9 +1225,9 @@ function collectFormData() {
   return d;
 }
 
-async function submitForm() {
+function submitForm() {
   DATA = collectFormData();
-  var url = await getShortUrl();
+  var url = getShortUrl();
 
   // Show share dialog
   var preview = document.getElementById('formPreview');
@@ -1307,19 +1313,35 @@ function loadFromShortCode(id) {
   }
 
   if (shortId) {
-    // 短链接:异步加载
+    // 短链接: 先尝试 localStorage, 失败则用 ?d= 回退
     console.log('[app] 检测到短链接,正在加载...');
     loadFromShortCode(shortId).then(function(loaded) {
       if (loaded && loaded.name) {
         DATA = loaded;
-        console.log('[app] 短链接数据加载成功');
+        console.log('[app] 短链接数据加载成功(本设备)');
       } else {
-        console.log('[app] 短链接加载失败');
-        toast('链接已失效或不存在');
+        // localStorage 无数据, 尝试 URL 中的 ?d= 回退
+        var fallback = loadDataFromURL();
+        if (fallback) {
+          DATA = fallback;
+          // 顺便存回 localStorage
+          LOCAL_STORE[shortId] = fallback;
+          saveLocalStore();
+          console.log('[app] 从 ?d= 回退加载成功');
+        } else {
+          console.log('[app] 数据加载失败: localStorage和URL均无数据');
+          toast('链接已失效或不存在');
+        }
       }
       runInit();
     });
   } else {
+    // 没有 ?s=,尝试从 ?d= 或 hash 加载
+    var urlData = loadDataFromURL();
+    if (urlData) {
+      DATA = urlData;
+      console.log('[app] 从URL加载数据成功');
+    }
     runInit();
   }
 })();
