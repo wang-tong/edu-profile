@@ -598,11 +598,19 @@ function genShortLinkAndShow() {
 }
 
 function getShortUrl() {
-  // 纯前端方案: s=短码(本设备localStorage) + d=完整数据(跨设备回退)
+  // 纯前端方案: s=短码(本设备localStorage) + d=轻量数据(跨设备回退,不含图片)
   var id = genLocalId(8);
+  // localStorage 存完整数据(含图片)
   LOCAL_STORE[id] = DATA;
   saveLocalStore();
-  var encoded = encodeData(DATA);
+
+  // ?d= 参数只传轻量数据(不含大体积图片和敏感信息)
+  var lite = JSON.parse(JSON.stringify(DATA));
+  lite.image_a = '';
+  lite.image_b = '';
+  lite.grad_image_a = '';
+  lite.grad_image_b = '';
+  var encoded = encodeData(lite);
   return window.location.origin + window.location.pathname + '?s=' + id + '&d=' + encoded;
 }
 
