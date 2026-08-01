@@ -505,26 +505,171 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== URL DATA ENCODING ==========
+// ========== LZW COMPRESSION on UTF-8 bytes ==========
+var LZUTF8 = (function() {
+  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~";
+  var R64 = {}; for (var i = 0; i < B64.length; i++) R64[B64[i]] = i;
+
+  // JS string -> UTF-8 byte array
+  function strToUTF8(s) {
+    var bytes = [];
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      if (c < 0x80) bytes.push(c);
+      else if (c < 0x800) { bytes.push(0xC0 | (c >>> 6)); bytes.push(0x80 | (c & 0x3F)); }
+      else if (c < 0xD800 || c >= 0xE000) { bytes.push(0xE0 | (c >>> 12)); bytes.push(0x80 | ((c >>> 6) & 0x3F)); bytes.push(0x80 | (c & 0x3F)); }
+      else { var d = s.charCodeAt(i+1); var cp = 0x10000 + ((c - 0xD800) << 10) + (d - 0xDC00); i++; bytes.push(0xF0 | (cp >>> 18)); bytes.push(0x80 | ((cp >>> 12) & 0x3F)); bytes.push(0x80 | ((cp >>> 6) & 0x3F)); bytes.push(0x80 | (cp & 0x3F)); }
+    }
+    return bytes;
+  }
+
+  // UTF-8 byte array -> JS string
+  function utf8ToStr(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) {
+      var b = bytes[i];
+      var cp, n;
+      if (b < 0x80) { cp = b; n = 0; }
+      else if ((b & 0xE0) === 0xC0) { cp = (b & 0x1F) << 6 | (bytes[i+1] & 0x3F); n = 1; }
+      else if ((b & 0xF0) === 0xE0) { cp = (b & 0x0F) << 12 | (bytes[i+1] & 0x3F) << 6 | (bytes[i+2] & 0x3F); n = 2; }
+      else { cp = (b & 0x07) << 18 | (bytes[i+1] & 0x3F) << 12 | (bytes[i+2] & 0x3F) << 6 | (bytes[i+3] & 0x3F); n = 3; }
+      s += String.fromCharCode(cp); i += n;
+    }
+    return s;
+  }
+
+  // LZW compress byte array -> array of 16-bit codes
+  function lzwEncode(bytes) {
+    if (bytes.length === 0) return [];
+    var dict = {}, dictSize = 256;
+    for (var i = 0; i < 256; i++) dict[String.fromCharCode(i)] = i;
+    var w = '', res = [];
+    for (var i = 0; i < bytes.length; i++) {
+      var c = String.fromCharCode(bytes[i]);
+      var wc = w + c;
+      if (wc in dict) { w = wc; }
+      else {
+        res.push(dict[w]);
+        if (dictSize < 65536) dict[wc] = dictSize++;
+        w = c;
+      }
+    }
+    if (w !== '') res.push(dict[w]);
+    return res;
+  }
+
+  // LZW decompress 16-bit codes -> byte array
+  function lzwDecode(codes) {
+    if (codes.length === 0) return [];
+    var dictSize = 256, dict = [];
+    for (var i = 0; i < 256; i++) dict.push(String.fromCharCode(i));
+    var w = String.fromCharCode(codes[0]);
+    var bytes = [codes[0]];
+    for (var i = 1; i < codes.length; i++) {
+      var entry;
+      var code = codes[i];
+      if (code < dictSize) entry = dict[code];
+      else if (code === dictSize) entry = w + w.charAt(0);
+      else return bytes;
+      for (var j = 0; j < entry.length; j++) bytes.push(entry.charCodeAt(j));
+      dict.push(w + entry.charAt(0));
+      dictSize++;
+      w = entry;
+    }
+    return bytes;
+  }
+
+  return {
+    compress: function(str) {
+      if (!str) return '';
+      var bytes = strToUTF8(str);
+      var codes = lzwEncode(bytes);
+      // Pack 16-bit codes into 6-bit chunks
+      var bits = 0, bitLen = 0, out = '';
+      for (var i = 0; i < codes.length; i++) {
+        bits = (bits << 16) | codes[i];
+        bitLen += 16;
+        while (bitLen >= 6) {
+          out += B64.charAt((bits >>> (bitLen - 6)) & 63);
+          bitLen -= 6;
+        }
+      }
+      if (bitLen > 0) out += B64.charAt((bits << (6 - bitLen)) & 63);
+      return out;
+    },
+    decompress: function(input) {
+      if (!input) return '';
+      // Unpack 6-bit chunks to 16-bit codes
+      var bits = 0, bitLen = 0, codes = [];
+      for (var i = 0; i < input.length; i++) {
+        bits = (bits << 6) | R64[input[i]];
+        bitLen += 6;
+        while (bitLen >= 16) {
+          codes.push((bits >>> (bitLen - 16)) & 0xFFFF);
+          bitLen -= 16;
+        }
+      }
+      // LZW decode
+      var bytes = lzwDecode(codes);
+      return utf8ToStr(bytes);
+    }
+  };
+})();
+
+// ========== URL DATA ENCODING (short keys + LZW) ==========
+var KEY_MAP = {
+  name:'n', gender:'g', nation:'nt',
+  school:'s', major:'m', xltype:'x', academic_qualification:'aq',
+  educational_system:'es', xllb:'xb', fenyuan:'fy', xisuo:'xs',
+  banji:'bj', xuehao:'xh', zhuangtai:'z',
+  ru_nian:'rn', ru_yue:'ry', ru_ri:'rr',
+  li_nian:'ln', li_yue:'ly', li_ri:'lr',
+  nian:'na', yue:'ye', ri:'ri',
+  image_a:'ia', image_b:'ib',
+  has_grad:'hg', grad_level:'gl',
+  grad_school:'gs', grad_major:'gm', grad_degree_type:'gt',
+  grad_educational_system:'ge', grad_enroll_type:'gp', grad_train_mode:'gm2',
+  grad_research:'gr', grad_supervisor:'gv',
+  grad_fenyuan:'gf', grad_xuehao:'gx', grad_zhuangtai:'gz',
+  grad_ru_nian:'gn', grad_ru_yue:'gy', grad_ru_ri:'gd',
+  grad_li_nian:'hn', grad_li_yue:'hy', grad_li_ri:'hd',
+  grad_image_a:'ga', grad_image_b:'gb'
+};
+var REV_MAP = {}; for (var k in KEY_MAP) REV_MAP[KEY_MAP[k]] = k;
+
+function shrinkKeys(obj) {
+  var o = {};
+  for (var k in obj) {
+    if (obj.hasOwnProperty(k)) o[KEY_MAP[k] || k] = obj[k];
+  }
+  return o;
+}
+function expandKeys(obj) {
+  var o = {};
+  for (var k in obj) {
+    if (obj.hasOwnProperty(k)) o[REV_MAP[k] || k] = obj[k];
+  }
+  return o;
+}
+
 function encodeData(obj) {
-  var json = JSON.stringify(obj);
-  // Use btoa with unicode handling
-  var encoded = btoa(unescape(encodeURIComponent(json)));
-  // Make URL-safe
-  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  return LZUTF8.compress(JSON.stringify(shrinkKeys(obj)));
 }
 
 function decodeData(str) {
+  // Try new LZUTF8 format first
   try {
-    // Restore from URL-safe
+    var json = LZUTF8.decompress(str);
+    if (json && json.length > 4) return expandKeys(JSON.parse(json));
+  } catch(e) {}
+  // Fallback to old base64 format
+  try {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding
     while (str.length % 4) str += '=';
-    var json = decodeURIComponent(escape(atob(str)));
-    return JSON.parse(json);
-  } catch(e) {
-    return null;
-  }
+    var json2 = decodeURIComponent(escape(atob(str)));
+    if (json2) return JSON.parse(json2);
+  } catch(e) {}
+  return null;
 }
 
 function loadDataFromURL() {

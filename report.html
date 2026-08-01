@@ -109,14 +109,104 @@ body{font-family:"SimSun","宋体",serif;background:var(--bg);min-height:100vh;c
 <div id="reportContainer"></div>
 
 <script>
+// ========== LZW COMPRESSION on UTF-8 bytes ==========
+var LZUTF8 = (function() {
+  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_~";
+  var R64 = {}; for (var i = 0; i < B64.length; i++) R64[B64[i]] = i;
+
+  function utf8ToStr(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) {
+      var b = bytes[i];
+      var cp, n;
+      if (b < 0x80) { cp = b; n = 0; }
+      else if ((b & 0xE0) === 0xC0) { cp = (b & 0x1F) << 6 | (bytes[i+1] & 0x3F); n = 1; }
+      else if ((b & 0xF0) === 0xE0) { cp = (b & 0x0F) << 12 | (bytes[i+1] & 0x3F) << 6 | (bytes[i+2] & 0x3F); n = 2; }
+      else { cp = (b & 0x07) << 18 | (bytes[i+1] & 0x3F) << 12 | (bytes[i+2] & 0x3F) << 6 | (bytes[i+3] & 0x3F); n = 3; }
+      s += String.fromCharCode(cp); i += n;
+    }
+    return s;
+  }
+
+  function lzwDecode(codes) {
+    if (codes.length === 0) return [];
+    var dictSize = 256, dict = [];
+    for (var i = 0; i < 256; i++) dict.push(String.fromCharCode(i));
+    var w = String.fromCharCode(codes[0]);
+    var bytes = [codes[0]];
+    for (var i = 1; i < codes.length; i++) {
+      var entry, code = codes[i];
+      if (code < dictSize) entry = dict[code];
+      else if (code === dictSize) entry = w + w.charAt(0);
+      else return bytes;
+      for (var j = 0; j < entry.length; j++) bytes.push(entry.charCodeAt(j));
+      dict.push(w + entry.charAt(0));
+      dictSize++;
+      w = entry;
+    }
+    return bytes;
+  }
+
+  return {
+    decompress: function(input) {
+      if (!input) return '';
+      var bits = 0, bitLen = 0, codes = [];
+      for (var i = 0; i < input.length; i++) {
+        bits = (bits << 6) | R64[input[i]];
+        bitLen += 6;
+        while (bitLen >= 16) {
+          codes.push((bits >>> (bitLen - 16)) & 0xFFFF);
+          bitLen -= 16;
+        }
+      }
+      var bytes = lzwDecode(codes);
+      return utf8ToStr(bytes);
+    }
+  };
+})();
+
+// ========== KEY MAP (long ↔ short) ==========
+var REV_MAP = {
+  n:'name', g:'gender', nt:'nation',
+  s:'school', m:'major', x:'xltype', aq:'academic_qualification',
+  es:'educational_system', xb:'xllb', fy:'fenyuan', xs:'xisuo',
+  bj:'banji', xh:'xuehao', z:'zhuangtai',
+  rn:'ru_nian', ry:'ru_yue', rr:'ru_ri',
+  ln:'li_nian', ly:'li_yue', lr:'li_ri',
+  na:'nian', ye:'yue', ri:'ri',
+  ia:'image_a', ib:'image_b',
+  hg:'has_grad', gl:'grad_level',
+  gs:'grad_school', gm:'grad_major', gt:'grad_degree_type',
+  ge:'grad_educational_system', gp:'grad_enroll_type', gm2:'grad_train_mode',
+  gr:'grad_research', gv:'grad_supervisor',
+  gf:'grad_fenyuan', gx:'grad_xuehao', gz:'grad_zhuangtai',
+  gn:'grad_ru_nian', gy:'grad_ru_yue', gd:'grad_ru_ri',
+  hn:'grad_li_nian', hy:'grad_li_yue', hd:'grad_li_ri',
+  ga:'grad_image_a', gb:'grad_image_b'
+};
+function expandKeys(obj) {
+  var o = {};
+  for (var k in obj) {
+    if (obj.hasOwnProperty(k)) o[REV_MAP[k] || k] = obj[k];
+  }
+  return o;
+}
+
 // ========== DATA DECODE ==========
 function decodeData(str) {
+  // Try new LZUTF8 format first
+  try {
+    var json = LZUTF8.decompress(str);
+    if (json && json.length > 4) return expandKeys(JSON.parse(json));
+  } catch(e) {}
+  // Fallback to old base64 format
   try {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (str.length % 4) str += '=';
-    var json = decodeURIComponent(escape(atob(str)));
-    return JSON.parse(json);
-  } catch(e) { return null; }
+    var json2 = decodeURIComponent(escape(atob(str)));
+    if (json2) return JSON.parse(json2);
+  } catch(e) {}
+  return null;
 }
 
 function getUrlParam(key) {
