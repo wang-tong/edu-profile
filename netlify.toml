@@ -1,7 +1,13 @@
 [build]
   functions = "netlify/functions"
 
-# 短链接 API 代理（让前端无 CORS 调用）
+# 数据存储 API
+[[redirects]]
+  from = "/api/store"
+  to = "/.netlify/functions/store"
+  status = 200
+
+# 短链接 API 代理
 [[redirects]]
   from = "/api/shorten"
   to = "/.netlify/functions/shorten"

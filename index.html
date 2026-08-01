@@ -508,6 +508,20 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
+// 如果有短ID，异步从服务端加载数据
+if (window.__shortId) {
+  loadFromServer(window.__shortId, function(err, data) {
+    if (data) {
+      DATA = data;
+      console.log('[app] 从服务端加载数据成功');
+      // 重新填充页面数据
+      if (typeof populateForm === 'function') populateForm();
+    } else {
+      console.log('[app] 服务端加载失败，使用默认数据');
+    }
+  });
+}
+
 // ========== URL DATA ENCODING ==========
 function encodeData(obj) {
   var json = JSON.stringify(obj);
@@ -541,6 +555,16 @@ function decodeData(str) {
 function loadDataFromURL() {
   var params = new URLSearchParams(window.location.search);
   var d = params.get('d');
+  var s = params.get('s'); // 短ID格式
+
+  // 优先从短ID加载
+  if (s && s.length <= 32) {
+    console.log('[app] 检测到短ID:', s);
+    // 返回标记，后续异步加载
+    window.__shortId = s;
+    return null; // 先返回null，后续 loadFromServer 填充
+  }
+
   if (!d) {
     var hash = window.location.hash;
     var m = hash.match(/[?&]d=([^&]+)/);
@@ -550,13 +574,54 @@ function loadDataFromURL() {
     var data = decodeData(d);
     if (data) {
       console.log('[app] 从URL加载数据成功,字段数=' + Object.keys(data).length);
-      // 合并默认值(兼容紧凑编码,缺失字段自动补齐)
       var merged = JSON.parse(JSON.stringify(DEFAULT_DATA));
       for (var k in data) { merged[k] = data[k]; }
       return merged;
     }
   }
   return null;
+}
+
+// 从服务端加载短ID对应的数据
+function loadFromServer(id, callback) {
+  var req = new XMLHttpRequest();
+  req.open('GET', '/api/store?id=' + encodeURIComponent(id), true);
+  req.timeout = 8000;
+  req.onload = function() {
+    try {
+      var data = JSON.parse(req.responseText);
+      if (data && !data.error) {
+        var merged = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        for (var k in data) { merged[k] = data[k]; }
+        return callback(null, merged);
+      }
+    } catch(e) {}
+    callback('parse error');
+  };
+  req.onerror = function() { callback('network error'); };
+  req.ontimeout = function() { callback('timeout'); };
+  req.send();
+}
+
+// 存储数据到服务端，获取短链接
+function saveToServer(data, callback) {
+  var req = new XMLHttpRequest();
+  req.open('POST', '/api/store', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.timeout = 10000;
+  req.onload = function() {
+    try {
+      var resp = JSON.parse(req.responseText);
+      if (resp && resp.id) {
+        var shortUrl = window.location.origin + window.location.pathname + '?s=' + resp.id;
+        return callback(null, shortUrl);
+      }
+    } catch(e) {}
+    callback('save failed');
+  };
+  req.onerror = function() { callback('network error'); };
+  req.ontimeout = function() { callback('timeout'); };
+  req.send(JSON.stringify({ data: data }));
 }
 
 // 紧凑编码：排除空值和与默认值相同的字段，大幅缩短链接
@@ -583,9 +648,24 @@ function buildShareURL(useCompact) {
 }
 
 function genShareLink() {
-  var url = buildShareURL(true);
-  showShareDialog(url);
-  toast('链接已生成，可直接复制到微信');
+  var preview = document.getElementById('formPreview');
+  document.getElementById('shareLinkText').textContent = '⏳ 正在生成短链接...';
+  preview.classList.add('show');
+  if (currentPage !== 'pg4') {
+    navTo('pg4');
+    populateForm();
+  }
+  saveToServer(DATA, function(err, shortUrl) {
+    if (shortUrl) {
+      document.getElementById('shareLinkText').textContent = shortUrl;
+      toast('链接已生成，可直接复制到微信');
+    } else {
+      // 回退到长链接
+      var url = buildShareURL(true);
+      document.getElementById('shareLinkText').textContent = url;
+      toast('链接已生成（长度较长，建议微信中长按复制到浏览器打开）');
+    }
+  });
 }
 
 function openReport() {
@@ -1229,17 +1309,34 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  var url = buildShareURL(true);
 
-  showShareDialog(url);
+  // 显示加载状态
+  document.getElementById('shareLinkText').textContent = '⏳ 正在生成短链接...';
+  document.getElementById('formPreview').classList.add('show');
 
-  // Update browser URL with compact encoding
-  try {
-    var newUrl = window.location.origin + window.location.pathname + '?d=' + compactEncode(DATA);
-    window.history.replaceState({}, '', newUrl);
-  } catch(e) {}
+  saveToServer(DATA, function(err, shortUrl) {
+    if (shortUrl) {
+      document.getElementById('shareLinkText').textContent = shortUrl;
+      // 更新浏览器URL
+      try { window.history.replaceState({}, '', shortUrl); } catch(e) {}
+      toast('✅ 已保存，链接可直接在微信打开');
+    } else {
+      var url = buildShareURL(true);
+      document.getElementById('shareLinkText').textContent = url;
+      try {
+        window.history.replaceState({}, '', window.location.origin + window.location.pathname + '?d=' + compactEncode(DATA));
+      } catch(e) {}
+      toast('✅ 已保存（建议微信中长按复制到浏览器打开）');
+    }
+    scrollToPreview();
+  });
+}
 
-  toast('✅ 信息已保存，链接可直接在微信打开');
+function scrollToPreview() {
+  setTimeout(function() {
+    var p = document.getElementById('formPreview');
+    if (p) p.scrollIntoView({behavior:'smooth'});
+  }, 300);
 }
 
 function submitAndPreview() {
