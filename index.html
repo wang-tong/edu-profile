@@ -637,17 +637,35 @@ var KEY_MAP = {
 };
 var REV_MAP = {}; for (var k in KEY_MAP) REV_MAP[KEY_MAP[k]] = k;
 
+// Image fields that contain data URL prefixes — strip them before compression
+var IMG_FIELDS = ['ia','ib','ga','gb'];
+var IMG_PREFIX = /^data:image\/\w+;base64,/;
+
 function shrinkKeys(obj) {
   var o = {};
   for (var k in obj) {
-    if (obj.hasOwnProperty(k)) o[KEY_MAP[k] || k] = obj[k];
+    if (!obj.hasOwnProperty(k)) continue;
+    var v = obj[k];
+    var sk = KEY_MAP[k] || k;
+    // Strip data URL prefix from image values to save space
+    if (IMG_FIELDS.indexOf(sk) >= 0 && typeof v === 'string') {
+      v = v.replace(IMG_PREFIX, '');
+    }
+    o[sk] = v;
   }
   return o;
 }
 function expandKeys(obj) {
   var o = {};
   for (var k in obj) {
-    if (obj.hasOwnProperty(k)) o[REV_MAP[k] || k] = obj[k];
+    if (!obj.hasOwnProperty(k)) continue;
+    var ek = REV_MAP[k] || k;
+    var v = obj[k];
+    // Add back data URL prefix for image fields
+    if (IMG_FIELDS.indexOf(k) >= 0 && typeof v === 'string' && v.length > 10 && !v.startsWith('data:')) {
+      v = 'data:image/jpeg;base64,' + v;
+    }
+    o[ek] = v;
   }
   return o;
 }
@@ -667,7 +685,7 @@ function decodeData(str) {
     str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (str.length % 4) str += '=';
     var json2 = decodeURIComponent(escape(atob(str)));
-    if (json2) return JSON.parse(json2);
+    if (json2) return expandKeys(JSON.parse(json2));
   } catch(e) {}
   return null;
 }
@@ -849,8 +867,8 @@ function handleImgUpload(inputEl, targetId) {
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
-      // 压缩到缩略图大小(最大200px宽,高质量JPEG)
-      var maxW = 200, maxH = 240;
+      // 压缩到极小缩略图(减少链接长度,仅用于头像预览)
+      var maxW = 80, maxH = 96;
       var w = img.width, h = img.height;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
@@ -858,8 +876,11 @@ function handleImgUpload(inputEl, targetId) {
       var canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
+      // 轻微模糊消除高频细节,进一步减小JPEG体积
+      ctx.filter = 'blur(0.3px)';
       ctx.drawImage(img, 0, 0, w, h);
-      var base64 = canvas.toDataURL('image/jpeg', 0.75);
+      ctx.filter = 'none';
+      var base64 = canvas.toDataURL('image/jpeg', 0.35);
 
       target.value = base64;
       target.style.color = '#09b37d';
