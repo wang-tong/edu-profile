@@ -132,6 +132,13 @@ function hasInfo(d) {
   return !!(d && d.name && d.school);
 }
 
+// 本地存储回退 (与 index.html 共享 localStorage key)
+var LOCAL_STORE = {};
+try {
+  var saved = localStorage.getItem('edu_local_store');
+  if (saved) LOCAL_STORE = JSON.parse(saved);
+} catch(e) {}
+
 // Check ?s= short link first
 var shortId = getUrlParam('s');
 if (shortId) {
@@ -139,6 +146,7 @@ if (shortId) {
     .then(function(resp) { return resp.ok ? resp.json() : null; })
     .then(function(loaded) {
       if (loaded && loaded.name) { data = loaded; }
+      else if (LOCAL_STORE[shortId]) { data = LOCAL_STORE[shortId]; }
       if (data) {
         renderReport(data);
       } else {
@@ -146,7 +154,12 @@ if (shortId) {
       }
     })
     .catch(function() {
-      document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>加载失败，请重试</p></div>';
+      // API 失败,尝试本地存储回退
+      if (LOCAL_STORE[shortId]) {
+        renderReport(LOCAL_STORE[shortId]);
+      } else {
+        document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>加载失败，请重试</p></div>';
+      }
     });
 } else if (data) {
   renderReport(data);

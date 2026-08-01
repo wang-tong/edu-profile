@@ -13,7 +13,11 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("edu-data");
+    const store = getStore({
+      name: "edu-data",
+      siteID: process.env.NETLIFY_SITE_ID || "60763acd-9010-4165-94fb-fc079a1647a1",
+      token: process.env.NETLIFY_ACCESS_TOKEN || "nfp_HvFArLAAApSy8PKzryn1LmnjhAQ45Z9F0ac8",
+    });
 
     if (event.httpMethod === "POST") {
       const body = JSON.parse(event.body || "{}");
@@ -22,7 +26,7 @@ exports.handler = async (event) => {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "数据不完整，缺少姓名或院校" }),
+          body: JSON.stringify({ error: "数据不完整,缺少姓名或院校" }),
         };
       }
 

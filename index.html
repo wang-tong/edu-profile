@@ -507,6 +507,24 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
+// 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
+var LOCAL_STORE = {};
+try {
+  var saved = localStorage.getItem('edu_local_store');
+  if (saved) LOCAL_STORE = JSON.parse(saved);
+} catch(e) {}
+
+function saveLocalStore() {
+  try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
+}
+
+function genLocalId(len) {
+  var s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var id = '';
+  for (var i = 0; i < len; i++) id += s[Math.floor(Math.random() * s.length)];
+  return id;
+}
+
 // ========== URL DATA ENCODING ==========
 function encodeData(obj) {
   var json = JSON.stringify(obj);
@@ -581,14 +599,23 @@ async function getShortUrl() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: DATA })
     });
+    if (!resp.ok) {
+      console.log('短链接API返回错误:', resp.status);
+      throw new Error('API error: ' + resp.status);
+    }
     var result = await resp.json();
     if (result.id) {
       return window.location.origin + window.location.pathname + '?s=' + result.id;
     }
   } catch(e) {
-    console.log('短链接生成失败,降级为长链接:', e);
+    console.log('短链接API不可用,使用本地存储回退');
   }
-  return buildShareURL();
+  
+  // 本地回退: localStorage + 内存存储
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
+  saveLocalStore();
+  return window.location.origin + window.location.pathname + '?s=' + id;
 }
 
 function showShareDialog(url) {
@@ -757,7 +784,7 @@ function handleImgUpload(inputEl, targetId) {
 
 function isFromShareLink() {
   var params = new URLSearchParams(window.location.search);
-  return !!params.get('d');
+  return !!(params.get('d') || params.get('s'));
 }
 
 // ========== INIT PG2 ==========
@@ -1231,24 +1258,11 @@ async function submitForm() {
 async function submitAndPreview() {
   DATA = collectFormData();
 
-  // 尝试生成短链接更新URL
+  // 使用 getShortUrl 统一处理（自动支持本地回退）
+  var url = await getShortUrl();
   try {
-    var resp = await fetch('/api/store', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: DATA })
-    });
-    var result = await resp.json();
-    if (result.id) {
-      var newUrl = window.location.origin + window.location.pathname + '?s=' + result.id;
-      window.history.replaceState({}, '', newUrl);
-    }
-  } catch(e) {
-    try {
-      var newUrl = window.location.origin + window.location.pathname + '?d=' + encodeData(DATA);
-      window.history.replaceState({}, '', newUrl);
-    } catch(e2) {}
-  }
+    window.history.replaceState({}, '', url);
+  } catch(e) {}
 
   // Navigate to pg2 to preview
   backTo('pg1');
@@ -1272,7 +1286,10 @@ function loadFromShortCode(id) {
       if (!resp.ok) return null;
       return resp.json();
     })
-    .catch(function() { return null; });
+    .catch(function() { 
+      // API 不可用,尝试本地存储回退
+      return LOCAL_STORE[id] || null;
+    });
 }
 
 // ========== INIT ==========
@@ -1291,6 +1308,11 @@ function loadFromShortCode(id) {
       initPg1();
       var reportBtn = document.getElementById('reportBtn');
       if (reportBtn) reportBtn.style.display = '';
+    }
+
+    // 如果当前在pg2,数据加载完成后刷新显示
+    if (currentPage === 'pg2') {
+      initPg2();
     }
 
     var id = params.get('id');
@@ -1312,7 +1334,7 @@ function loadFromShortCode(id) {
   }
 
   if (shortId) {
-    // 短链接：异步加载
+    // 短链接:异步加载
     console.log('[app] 检测到短链接,正在加载...');
     loadFromShortCode(shortId).then(function(loaded) {
       if (loaded && loaded.name) {
