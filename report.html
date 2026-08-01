@@ -157,7 +157,7 @@ if (shortId) {
 }
 
 function hasGradInfo(d) {
-  return !!(d && d.grad_name && d.grad_school);
+  return !!(d && d.has_grad && d.grad_school && d.grad_major);
 }
 
 function safeVal(v) { return v || '—'; }
@@ -290,7 +290,7 @@ function renderReport(d) {
     html += '<div class="info-wrapper">';
     html += '<table class="info-table">';
     html += '<tr>';
-    html += '<td class="label">姓名</td><td class="value">' + safeVal(d.grad_name || d.name) + '</td>';
+    html += '<td class="label">姓名</td><td class="value">' + safeVal(d.name) + '</td>';
     html += '<td class="label">性别</td><td class="value">' + safeVal(d.grad_gender || d.gender) + '</td>';
     html += '<td class="label">民族</td><td class="value">' + safeVal(d.grad_nation || d.nation) + '</td>';
     html += '</tr><tr>';
