@@ -142,25 +142,14 @@ try {
 // Check ?s= short link first
 var shortId = getUrlParam('s');
 if (shortId) {
-  fetch('/api/store?id=' + encodeURIComponent(shortId))
-    .then(function(resp) { return resp.ok ? resp.json() : null; })
-    .then(function(loaded) {
-      if (loaded && loaded.name) { data = loaded; }
-      else if (LOCAL_STORE[shortId]) { data = LOCAL_STORE[shortId]; }
-      if (data) {
-        renderReport(data);
-      } else {
-        document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
-      }
-    })
-    .catch(function() {
-      // API 失败,尝试本地存储回退
-      if (LOCAL_STORE[shortId]) {
-        renderReport(LOCAL_STORE[shortId]);
-      } else {
-        document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>加载失败，请重试</p></div>';
-      }
-    });
+  if (LOCAL_STORE[shortId] && LOCAL_STORE[shortId].name) {
+    renderReport(LOCAL_STORE[shortId]);
+  } else if (data) {
+    // 短码在本设备不存在,回退到 ?d= 数据
+    renderReport(data);
+  } else {
+    document.getElementById('reportContainer').innerHTML = '<div class="no-data"><p>链接已失效或不存在</p><p style="margin-top:10px;font-size:13px;color:#aaa">短链接仅在同一设备有效，请使用完整分享链接</p><p style="margin-top:10px"><a href="index.html">→ 前往填写信息</a></p></div>';
+  }
 } else if (data) {
   renderReport(data);
 } else {

@@ -586,32 +586,14 @@ function openReport() {
   window.open('report.html?d=' + url.split('?d=')[1], '_blank');
 }
 
-async function genShortLinkAndShow() {
+function genShortLinkAndShow() {
   DATA = collectFormData();
-  var url = await getShortUrl();
+  var url = getShortUrl();
   showShareDialog(url);
 }
 
-async function getShortUrl() {
-  try {
-    var resp = await fetch('/api/store', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: DATA })
-    });
-    if (!resp.ok) {
-      console.log('短链接API返回错误:', resp.status);
-      throw new Error('API error: ' + resp.status);
-    }
-    var result = await resp.json();
-    if (result.id) {
-      return window.location.origin + window.location.pathname + '?s=' + result.id;
-    }
-  } catch(e) {
-    console.log('短链接API不可用,使用本地存储回退');
-  }
-  
-  // 本地回退: localStorage + 内存存储
+function getShortUrl() {
+  // 纯前端方案: 数据存 localStorage,URL 只用短码
   var id = genLocalId(8);
   LOCAL_STORE[id] = DATA;
   saveLocalStore();
@@ -1255,16 +1237,14 @@ async function submitForm() {
   toast('信息已保存,短链接已生成!');
 }
 
-async function submitAndPreview() {
+function submitAndPreview() {
   DATA = collectFormData();
 
-  // 使用 getShortUrl 统一处理（自动支持本地回退）
-  var url = await getShortUrl();
+  var url = getShortUrl();
   try {
     window.history.replaceState({}, '', url);
   } catch(e) {}
 
-  // Navigate to pg2 to preview
   backTo('pg1');
   setTimeout(function() { navTo('pg2'); }, 100);
   toast('请查看高等教育信息页预览效果');
@@ -1281,15 +1261,8 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
 });
 
 function loadFromShortCode(id) {
-  return fetch('/api/store?id=' + encodeURIComponent(id))
-    .then(function(resp) {
-      if (!resp.ok) return null;
-      return resp.json();
-    })
-    .catch(function() { 
-      // API 不可用,尝试本地存储回退
-      return LOCAL_STORE[id] || null;
-    });
+  // 纯前端方案: 直接从 localStorage 读取
+  return Promise.resolve(LOCAL_STORE[id] || null);
 }
 
 // ========== INIT ==========
