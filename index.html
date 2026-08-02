@@ -526,6 +526,71 @@ var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 // Cloudflare Workers 短链服务地址（部署后替换为实际地址）
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
+// ========== GitHub 直推配置（无需Worker，浏览器直接调用GitHub API）==========
+var GITHUB_OWNER = 'wang-tong';
+var GITHUB_REPO = 'edu-profile';
+var GITHUB_BRANCH = 'main';
+
+function _getGithubToken() {
+  try { return localStorage.getItem('edu_gh_token'); } catch(e) { return ''; }
+}
+function _setGithubToken(t) {
+  try { localStorage.setItem('edu_gh_token', t); } catch(e) {}
+}
+
+// 获取模板页面（从同域名下的g.html）
+function _fetchTemplate(cb) {
+  var base = location.pathname.replace(/[^/]+$/, '');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', base + 'g.html', true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    if (xhr.status === 200) { cb(null, xhr.responseText); }
+    else { cb(new Error('Template fetch failed: ' + xhr.status)); }
+  };
+  xhr.onerror = function() { cb(new Error('Network error')); };
+  xhr.ontimeout = function() { cb(new Error('Timeout')); };
+  xhr.send();
+}
+
+// 填充模板数据
+function _fillTemplate(template, data) {
+  var oldName = (template.match(/name:'([^']*)'/) || [])[1] || '';
+  // 替换标题
+  template = template.replace(/<title>[^<]*<\/title>/, '<title>' + (data.name || '') + ' · 学信档案</title>');
+  // 替换所有旧名字引用
+  if (oldName) template = template.split(oldName).join(data.name || '');
+  // 替换DEFAULT_DATA整个块
+  template = template.replace(
+    /var DEFAULT_DATA = \{[\s\S]*?\};/,
+    'var DEFAULT_DATA = ' + JSON.stringify(data) + ';'
+  );
+  return template;
+}
+
+// 通过GitHub API推送文件
+function _pushToGithub(token, path, content, displayName, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + path, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    if (xhr.status === 201 || xhr.status === 200) { cb(null); }
+    else { cb(new Error('GitHub API: ' + xhr.status + ' ' + (xhr.responseText||'').slice(0,200))); }
+  };
+  xhr.onerror = function() { cb(new Error('Network error')); };
+  xhr.ontimeout = function() { cb(new Error('Timeout')); };
+  // base64编码(UTF-8安全)
+  var encoded = btoa(unescape(encodeURIComponent(content)));
+  xhr.send(JSON.stringify({
+    message: 'Add page for ' + (displayName || 'unknown'),
+    content: encoded,
+    branch: GITHUB_BRANCH
+  }));
+}
+
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
 var LOCAL_STORE = {};
 try {
@@ -693,11 +758,54 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  showShareDialog('⏳ 正在生成分享链接...');
 
-  // 直接生成静态 ?d= 链接(LZString压缩,无需Worker API)
+  var token = _getGithubToken();
+  if (!token) {
+    token = prompt(
+      '🔐 首次使用需要 GitHub Personal Access Token\n' +
+      '用于自动创建独立展示页面\n\n' +
+      '📌 获取方式(30秒):\n' +
+      '1. 打开 https://github.com/settings/tokens\n' +
+      '2. 点击 Generate new token (classic)\n' +
+      '3. 勾选 repo 权限\n' +
+      '4. 生成后复制粘贴到此处\n\n' +
+      '💡 Token 仅保存在你的浏览器本地'
+    );
+    if (!token || !token.trim()) { fallbackShareLink(); return; }
+    token = token.trim();
+    _setGithubToken(token);
+  }
+
+  showShareDialog('⏳ 正在生成专属页面...');
+
+  // 1. 获取模板
+  _fetchTemplate(function(err, template) {
+    if (err) { console.warn('Template fetch failed:', err); fallbackShareLink(); return; }
+
+    // 2. 填充数据生成页面
+    var html = _fillTemplate(template, DATA);
+
+    // 3. 生成页面ID推送到GitHub
+    var pageId = 'p_' + Math.random().toString(36).slice(2, 8);
+    var pagePath = pageId + '.html';
+
+    _pushToGithub(token, pagePath, html, DATA.name, function(err) {
+      if (err) {
+        console.warn('GitHub push failed:', err);
+        // token可能过期,清除重试
+        if (err.message.indexOf('401') > -1) _setGithubToken('');
+        fallbackShareLink();
+        return;
+      }
+      var url = 'https://' + GITHUB_OWNER + '.github.io/' + GITHUB_REPO + '/' + pagePath;
+      updateShareDialog(url);
+    });
+  });
+}
+
+function fallbackShareLink() {
   var encoded = encodeData(DATA);
-  var shareUrl = window.location.origin + window.location.pathname + '?d=' + encoded;
+  var shareUrl = location.origin + location.pathname + '?d=' + encoded;
   updateShareDialog(shareUrl);
 }
 
