@@ -693,18 +693,12 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  showShareDialog('⏳ 正在生成短链接...');
+  showShareDialog('⏳ 正在生成分享链接...');
 
-  saveShortLink(function(err, id) {
-    if (err) {
-      var fullUrl = getOfflineUrl();
-      updateShareDialog(fullUrl);
-      return;
-    }
-    var shortUrl = WORKER_URL + '/s/' + id;
-    var fullUrl = window.location.origin + window.location.pathname + '?q=' + id;
-    updateShareDialog(shortUrl, fullUrl);
-  });
+  // 直接生成静态 ?d= 链接(LZString压缩,无需Worker API)
+  var encoded = encodeData(DATA);
+  var shareUrl = window.location.origin + window.location.pathname + '?d=' + encoded;
+  updateShareDialog(shareUrl);
 }
 
 // 通过 TinyURL 缩短链接,失败则回退原链接
