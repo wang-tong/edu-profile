@@ -629,14 +629,17 @@ function getOfflineUrl() {
 }
 
 function saveToGist(callback) {
+  // 直接调 GitHub Gist API(纯前端,无需后端服务)
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', window.location.origin + '/api/gist', true);
+  xhr.open('POST', 'https://api.github.com/gists', true);
+  xhr.setRequestHeader('Authorization', 'token __YOUR_GITHUB_TOKEN__');
   xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
   xhr.onload = function() {
-    if (xhr.status === 200) {
+    if (xhr.status === 201) {
       try {
-        var res = JSON.parse(xhr.responseText);
-        if (res.id) callback(null, res.id);
+        var gist = JSON.parse(xhr.responseText);
+        if (gist.id) callback(null, gist.id);
         else callback(new Error('无效响应'));
       } catch(e) { callback(e); }
     } else {
@@ -644,7 +647,11 @@ function saveToGist(callback) {
     }
   };
   xhr.onerror = function() { callback(new Error('网络错误')); };
-  xhr.send(JSON.stringify({ data: DATA }));
+  xhr.send(JSON.stringify({
+    public: true,
+    description: '学信档案',
+    files: { 'data.json': { content: JSON.stringify(DATA) } }
+  }));
 }
 
 function updateShareDialog(url) {
