@@ -534,11 +534,13 @@ var GITHUB_OWNER = 'wang-tong';
 var GITHUB_REPO = 'edu-profile';
 var GITHUB_BRANCH = 'main';
 
+// 自动推送Token（已内置，无需手动输入）
+var GITHUB_TOKEN = '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';
 function _getGithubToken() {
-  try { return localStorage.getItem('edu_gh_token'); } catch(e) { return ''; }
+  return GITHUB_TOKEN;
 }
 function _setGithubToken(t) {
-  try { localStorage.setItem('edu_gh_token', t); } catch(e) {}
+  // 不再使用localStorage
 }
 
 // 获取模板页面（从同域名下的g.html）
@@ -761,24 +763,7 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  toast('🚀 正在通过 GitHub API 创建专属页面...');
-
   var token = _getGithubToken();
-  if (!token) {
-    token = prompt(
-      '🔐 首次使用需要 GitHub Personal Access Token\n' +
-      '用于自动创建独立展示页面\n\n' +
-      '📌 获取方式(30秒):\n' +
-      '1. 打开 https://github.com/settings/tokens\n' +
-      '2. 点击 Generate new token (classic)\n' +
-      '3. 勾选 repo 权限\n' +
-      '4. 生成后复制粘贴到此处\n\n' +
-      '💡 Token 仅保存在你的浏览器本地'
-    );
-    if (!token || !token.trim()) { fallbackShareLink(); return; }
-    token = token.trim();
-    _setGithubToken(token);
-  }
 
   showShareDialog('⏳ 正在生成专属页面...');
 
