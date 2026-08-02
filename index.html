@@ -647,7 +647,15 @@ function saveShortLink(callback) {
     }
   };
   xhr.onerror = function() { callback(new Error('网络错误')); };
-  xhr.send(JSON.stringify({ data: DATA }));
+  // 用 LZString 压缩数据(图片base64可大幅压缩),避免超出Worker 128KB请求限制
+  var payload = { data: DATA };
+  if (typeof LZString !== 'undefined' && LZString.compressToEncodedURIComponent) {
+    try {
+      payload.compressed = LZString.compressToEncodedURIComponent(JSON.stringify(DATA));
+      delete payload.data; // 压缩后不再传原始data
+    } catch(e) {}
+  }
+  xhr.send(JSON.stringify(payload));
 }
 
 function updateShareDialog(shortUrl, fullUrl) {
@@ -1407,9 +1415,20 @@ function loadFromShortCode(id) {
   return fetch(WORKER_URL + '/api/get/' + id)
     .then(function(r) {
       if (!r.ok) throw new Error('Not found');
-      return r.json();
+      return r.text(); // 可能是压缩字符串或JSON
     })
-    .then(function(data) {
+    .then(function(raw) {
+      var data;
+      // 先尝试JSON解析
+      try { data = JSON.parse(raw); } catch(e) {
+        // 失败则尝试LZString解压(压缩格式)
+        if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+          try {
+            var decompressed = LZString.decompressFromEncodedURIComponent(raw);
+            if (decompressed) data = JSON.parse(decompressed);
+          } catch(e2) {}
+        }
+      }
       if (data && data.name) {
         LOCAL_STORE[id] = data;
         saveLocalStore();
