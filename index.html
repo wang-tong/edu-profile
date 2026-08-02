@@ -628,6 +628,32 @@ function getOfflineUrl() {
   return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
 }
 
+function saveToGist(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', window.location.origin + '/api/gist', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (res.id) callback(null, res.id);
+        else callback(new Error('无效响应'));
+      } catch(e) { callback(e); }
+    } else {
+      callback(new Error('HTTP ' + xhr.status));
+    }
+  };
+  xhr.onerror = function() { callback(new Error('网络错误')); };
+  xhr.send(JSON.stringify({ data: DATA }));
+}
+
+function updateShareDialog(url) {
+  document.getElementById('shortLinkText').textContent = url;
+  document.getElementById('shortLinkSpinner').style.display = 'none';
+  document.getElementById('shortLinkWrap').style.display = '';
+  document.getElementById('fullLinkText').textContent = url;
+}
+
 function genShareLink() {
   genShortLinkAndShow();
 }
@@ -656,13 +682,16 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  var fullUrl = getOfflineUrl();
-  showShareDialog(fullUrl);
-  // 异步缩短链接
-  shortenUrl(fullUrl, function(shortUrl) {
-    document.getElementById('shortLinkText').textContent = shortUrl;
-    document.getElementById('shortLinkSpinner').style.display = 'none';
-    document.getElementById('shortLinkWrap').style.display = '';
+  showShareDialog('⏳ 正在生成短链接...');
+
+  saveToGist(function(err, gistId) {
+    if (err) {
+      var fullUrl = getOfflineUrl();
+      updateShareDialog(fullUrl);
+      return;
+    }
+    var shortUrl = window.location.origin + window.location.pathname + '?q=' + gistId;
+    updateShareDialog(shortUrl);
   });
 }
 
@@ -1324,18 +1353,21 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
-  var offlineUrl = getOfflineUrl();
-  var fullUrl = buildShareURL();
+  showShareDialog('⏳ 正在保存...');
 
-  // Show both links
-  showShareDialog(offlineUrl, fullUrl);
-
-  // Update current URL without reload
-  try {
-    window.history.replaceState({}, '', offlineUrl);
-  } catch(e) {}
-
-  toast('信息已保存,离线短链接已生成!');
+  saveToGist(function(err, gistId) {
+    if (err) {
+      var offlineUrl = getOfflineUrl();
+      updateShareDialog(offlineUrl);
+      try { window.history.replaceState({}, '', offlineUrl); } catch(e) {}
+      toast('信息已保存(本地模式)');
+      return;
+    }
+    var shortUrl = window.location.origin + window.location.pathname + '?q=' + gistId;
+    updateShareDialog(shortUrl);
+    try { window.history.replaceState({}, '', shortUrl); } catch(e) {}
+    toast('信息已保存,短链接已生成!');
+  });
 }
 
 function submitAndPreview() {
@@ -1362,8 +1394,28 @@ document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
 });
 
 function loadFromShortCode(id) {
-  // 纯前端方案: 直接从 localStorage 读取
-  return Promise.resolve(LOCAL_STORE[id] || null);
+  // 先尝试本地 localStorage
+  var local = LOCAL_STORE[id];
+  if (local && local.name) return Promise.resolve(local);
+
+  // 本地没有,尝试 GitHub Gist API(公开 Gist 无需 Token,支持 CORS)
+  return fetch('https://api.github.com/gists/' + id)
+    .then(function(r) {
+      if (!r.ok) throw new Error('Gist not found');
+      return r.json();
+    })
+    .then(function(gist) {
+      var file = gist.files && gist.files['data.json'];
+      var content = file && file.content;
+      if (content) {
+        var data = JSON.parse(content);
+        LOCAL_STORE[id] = data;
+        saveLocalStore();
+        return data;
+      }
+      return null;
+    })
+    .catch(function() { return null; });
 }
 
 // ========== INIT ==========
