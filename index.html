@@ -1466,23 +1466,8 @@ function collectFormData() {
 }
 
 function submitForm() {
-  DATA = collectFormData();
-  showShareDialog('⏳ 正在保存...');
-
-  saveShortLink(function(err, id) {
-    if (err) {
-      var offlineUrl = getOfflineUrl();
-      updateShareDialog(offlineUrl);
-      try { window.history.replaceState({}, '', offlineUrl); } catch(e) {}
-      toast('信息已保存(本地模式)');
-      return;
-    }
-    var shortUrl = WORKER_URL + '/s/' + id;
-    var fullUrl = window.location.origin + window.location.pathname + '?q=' + id;
-    updateShareDialog(shortUrl, fullUrl);
-    try { window.history.replaceState({}, '', fullUrl); } catch(e) {}
-    toast('短链接已生成!');
-  });
+  // 统一走 GitHub 推送逻辑（与首页"生成分享链接"一致）
+  genShortLinkAndShow();
 }
 
 function submitAndPreview() {
