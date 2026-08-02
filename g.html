@@ -868,11 +868,9 @@ function initPg1() {
       recTitle.textContent = DATA.name + ' · 学信档案';
     }
   }
-  // 非分享链接才显示编辑按钮,分享链接始终隐藏
-  if (!isFromShareLink()) {
-    var editBar = document.getElementById('editBar');
-    if (editBar) editBar.style.display = 'flex';
-  }
+  // g.html 独立展示页: 始终隐藏编辑按钮栏
+  var editBar = document.getElementById('editBar');
+  if (editBar) editBar.style.display = 'none';
 }
 
 function handleImgUpload(inputEl, targetId) {
@@ -1454,10 +1452,9 @@ function loadFromShortCode(id) {
   if (!shortId) shortId = params.get('s');
 
   function runInit() {
+    // g.html 独立展示页: 始终隐藏编辑按钮栏
     var editBar = document.getElementById('editBar');
-    if (editBar && !isFromShareLink()) {
-      editBar.style.display = 'flex';
-    }
+    if (editBar) editBar.style.display = 'none';
 
     var hasData = !!(DATA.name && DATA.school);
     if (hasData) {
