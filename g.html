@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>高显亮 · 学信档案</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;-webkit-user-select:none;user-select:none}
+body{max-width:450px;margin:0 auto;min-height:100vh}
+.header{background:linear-gradient(135deg,#09b37d,#26ae81);padding:40px 20px 30px;text-align:center;color:#fff}
+.header h1{font-size:22px;margin-bottom:6px}
+.header .sub{font-size:13px;opacity:.85}
+.card{margin:12px 12px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{padding:14px 16px;font-size:15px;font-weight:700;color:#333;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px}
+.row{display:flex;padding:12px 16px;border-bottom:1px solid #f5f5f5}
+.row:last-child{border-bottom:none}
+.label{width:80px;flex-shrink:0;font-size:13px;color:#999}
+.value{flex:1;font-size:14px;color:#333;word-break:break-all}
+.photos{padding:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.photo-item{text-align:center}
+.photo-box{width:90px;height:115px;border-radius:8px;overflow:hidden;background:#f5f5f5;display:flex;align-items:center;justify-content:center;border:1px solid #eee}
+.photo-box img{width:100%;height:100%;object-fit:cover}
+.photo-label{font-size:12px;color:#999;margin-top:6px}
+.placeholder{width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+.placeholder svg{width:32px;height:32px;opacity:.3}
+.footer{text-align:center;padding:24px 16px;font-size:12px;color:#bbb}
+.footer a{color:#09b37d;text-decoration:none}
+.badge{font-size:11px;background:#e8f5e9;color:#09b37d;padding:2px 8px;border-radius:10px;margin-left:6px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>高显亮</h1>
+  <div class="sub">福建师范大学 · 新能源科学与工程</div>
+</div>
+
+<div class="card">
+  <div class="card-title">📋 基本信息</div>
+  <div class="row"><span class="label">姓名</span><span class="value">高显亮</span></div>
+  <div class="row"><span class="label">性别</span><span class="value">男</span></div>
+  <div class="row"><span class="label">民族</span><span class="value">汉族</span></div>
+  <div class="row"><span class="label">出生日期</span><span class="value">2000年10月31日</span></div>
+  <div class="row"><span class="label">证件号码</span><span class="value">45030520001031019</span></div>
+</div>
+
+<div class="card">
+  <div class="card-title">📷 照片</div>
+  <div class="photos">
+    <div class="photo-item">
+      <div class="photo-box" id="admPhoto">
+        <!-- 录取照片: 替换下方 src 为照片 base64 或链接 -->
+        <img id="admImg" src="" alt="" style="display:none">
+        <div class="placeholder" id="admPlaceholder"><svg viewBox="0 0 24 24" fill="#ccc"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      </div>
+      <div class="photo-label">录取照片</div>
+    </div>
+    <div class="photo-item">
+      <div class="photo-box" id="degPhoto">
+        <img id="degImg" src="" alt="" style="display:none">
+        <div class="placeholder" id="degPlaceholder"><svg viewBox="0 0 24 24" fill="#ccc"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      </div>
+      <div class="photo-label">学历照片</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">🎓 学籍信息 <span class="badge">本科</span></div>
+  <div class="row"><span class="label">院校</span><span class="value">福建师范大学</span></div>
+  <div class="row"><span class="label">学历层次</span><span class="value">本科</span></div>
+  <div class="row"><span class="label">学制</span><span class="value">4年</span></div>
+  <div class="row"><span class="label">专业</span><span class="value">新能源科学与工程</span></div>
+  <div class="row"><span class="label">学习形式</span><span class="value">普通全日制</span></div>
+  <div class="row"><span class="label">学历类别</span><span class="value">普通高等教育</span></div>
+  <div class="row"><span class="label">院系</span><span class="value">材料工程学院</span></div>
+  <div class="row"><span class="label">系(所)</span><span class="value">材料工程</span></div>
+  <div class="row"><span class="label">班级</span><span class="value">材料253</span></div>
+  <div class="row"><span class="label">学号</span><span class="value">2512321</span></div>
+  <div class="row"><span class="label">入学日期</span><span class="value">2023年09月01日</span></div>
+  <div class="row"><span class="label">预计毕业</span><span class="value">2027年06月30日</span></div>
+  <div class="row"><span class="label">学籍状态</span><span class="value" style="color:#09b37d;font-weight:500">在籍(注册学籍)</span></div>
+</div>
+
+<div class="footer">
+  学信档案 · 电子备案信息<br>
+  <a href="/edu-profile/">返回首页</a>
+</div>
+
+<script>
+// 录取照片 base64 填入此处 ↓ (替换引号内)
+var admPhoto = '';
+// 学历照片 base64 填入此处 ↓
+var degPhoto = '';
+
+if (admPhoto) {
+  document.getElementById('admImg').src = admPhoto;
+  document.getElementById('admImg').style.display = 'block';
+  document.getElementById('admPlaceholder').style.display = 'none';
+}
+if (degPhoto) {
+  document.getElementById('degImg').src = degPhoto;
+  document.getElementById('degImg').style.display = 'block';
+  document.getElementById('degPlaceholder').style.display = 'none';
+}
+</script>
+</body>
+</html>
