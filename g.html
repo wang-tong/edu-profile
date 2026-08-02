@@ -8,7 +8,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;-webkit-user-select:none;user-select:none}
 body{max-width:450px;margin:0 auto;min-height:100vh}
-.header{background:linear-gradient(135deg,#09b37d,#26ae81);padding:40px 20px 30px;text-align:center;color:#fff}
+.header{background:linear-gradient(135deg,#09b37d,#26ae81);padding:40px 20px 30px;text-align:center;color:#fff;position:relative}
 .header h1{font-size:22px;margin-bottom:6px}
 .header .sub{font-size:13px;opacity:.85}
 .card{margin:12px 12px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
@@ -50,7 +50,6 @@ body{max-width:450px;margin:0 auto;min-height:100vh}
   <div class="photos">
     <div class="photo-item">
       <div class="photo-box" id="admPhoto">
-        <!-- 录取照片: 替换下方 src 为照片 base64 或链接 -->
         <img id="admImg" src="" alt="" style="display:none">
         <div class="placeholder" id="admPlaceholder"><svg viewBox="0 0 24 24" fill="#ccc"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
       </div>
@@ -89,7 +88,7 @@ body{max-width:450px;margin:0 auto;min-height:100vh}
 </div>
 
 <script>
-// 录取照片 base64 填入此处 ↓ (替换引号内)
+// 录取照片 base64 填入此处 ↓ (替换引号内内容)
 var admPhoto = '';
 // 学历照片 base64 填入此处 ↓
 var degPhoto = '';
