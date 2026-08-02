@@ -58,6 +58,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .rec-btn.blue{background:var(--blue)}
 .share-bar{margin:0 12px 8px;display:flex;gap:8px}
 .share-bar .rec-btn{flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:13px}
+/* g.html独立展示页:强制隐藏编辑按钮栏 */
+#editBar{display:none !important}
 .grid-sect{margin:0 12px;background:var(--white);border-radius:12px;overflow:hidden}
 .grid-container{display:grid;grid-template-columns:repeat(3,1fr)}
 .grid-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 8px;height:105px;cursor:pointer;transition:background .2s;position:relative}
@@ -1459,8 +1461,9 @@ function loadFromShortCode(id) {
     var hasData = !!(DATA.name && DATA.school);
     if (hasData) {
       initPg1();
-      var reportBtn = document.getElementById('reportBtn');
-      if (reportBtn) reportBtn.style.display = '';
+      // g.html独立展示页:不显示reportBtn
+      // var reportBtn = document.getElementById('reportBtn');
+      // if (reportBtn) reportBtn.style.display = '';
     }
 
     // 如果当前在pg2,数据加载完成后刷新显示
