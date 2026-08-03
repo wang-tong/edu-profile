@@ -530,9 +530,9 @@ var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 // Cloudflare Workers 短链服务地址（部署后替换为实际地址）
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
-// ========== 腾讯云 SCF 推送服务 ==========
-// 部署云函数后，将下面的 URL 替换为你的 API 网关地址
-var SCF_URL = 'https://service-xxxxx-xxxxx.gz.apigw.tencentcs.com/release/push';
+// ========== Cloudflare Worker 推送服务 ==========
+// Worker 已部署: /api/push 接收数据 → 生成 HTML → 推送到 GitHub → 返回短链接
+var PUSH_API_URL = WORKER_URL + '/api/push';
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
 var LOCAL_STORE = {};
@@ -703,9 +703,9 @@ function genShortLinkAndShow() {
   DATA = collectFormData();
   showShareDialog('⏳ 正在生成专属页面...');
 
-  // 调用腾讯云 SCF 推送独立页面到 GitHub
+  // 调用 Cloudflare Worker 推送独立页面到 GitHub
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', SCF_URL, true);
+  xhr.open('POST', PUSH_API_URL, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.timeout = 30000;
   xhr.onload = function() {
