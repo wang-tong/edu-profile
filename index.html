@@ -19,8 +19,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="version" content="ef41c20-auto">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js?v=2"></script>
-<title>学信档案 v2.1</title>
+<title>学信档案 v2.2 · 自动推送</title>
 <script>
 // 注册Service Worker实现离线打开
 if ('serviceWorker' in navigator) {
@@ -529,72 +530,9 @@ var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 // Cloudflare Workers 短链服务地址（部署后替换为实际地址）
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
-// ========== GitHub 直推配置（无需Worker，浏览器直接调用GitHub API）==========
-var GITHUB_OWNER = 'wang-tong';
-var GITHUB_REPO = 'edu-profile';
-var GITHUB_BRANCH = 'main';
-
-// 自动推送Token（已内置，无需手动输入）
-var GITHUB_TOKEN = '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';
-function _getGithubToken() {
-  return GITHUB_TOKEN;
-}
-function _setGithubToken(t) {
-  // 不再使用localStorage
-}
-
-// 获取模板页面（从同域名下的g.html）
-function _fetchTemplate(cb) {
-  var base = location.pathname.replace(/[^/]+$/, '');
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', base + 'g.html', true);
-  xhr.timeout = 15000;
-  xhr.onload = function() {
-    if (xhr.status === 200) { cb(null, xhr.responseText); }
-    else { cb(new Error('Template fetch failed: ' + xhr.status)); }
-  };
-  xhr.onerror = function() { cb(new Error('Network error')); };
-  xhr.ontimeout = function() { cb(new Error('Timeout')); };
-  xhr.send();
-}
-
-// 填充模板数据
-function _fillTemplate(template, data) {
-  var oldName = (template.match(/name:'([^']*)'/) || [])[1] || '';
-  // 替换标题
-  template = template.replace(/<title>[^<]*<\/title>/, '<title>' + (data.name || '') + ' · 学信档案</title>');
-  // 替换所有旧名字引用
-  if (oldName) template = template.split(oldName).join(data.name || '');
-  // 替换DEFAULT_DATA整个块
-  template = template.replace(
-    /var DEFAULT_DATA = \{[\s\S]*?\};/,
-    'var DEFAULT_DATA = ' + JSON.stringify(data) + ';'
-  );
-  return template;
-}
-
-// 通过GitHub API推送文件
-function _pushToGithub(token, path, content, displayName, cb) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('PUT', 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + path, true);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-  xhr.timeout = 30000;
-  xhr.onload = function() {
-    if (xhr.status === 201 || xhr.status === 200) { cb(null); }
-    else { cb(new Error('GitHub API: ' + xhr.status + ' ' + (xhr.responseText||'').slice(0,200))); }
-  };
-  xhr.onerror = function() { cb(new Error('Network error')); };
-  xhr.ontimeout = function() { cb(new Error('Timeout')); };
-  // base64编码(UTF-8安全)
-  var encoded = btoa(unescape(encodeURIComponent(content)));
-  xhr.send(JSON.stringify({
-    message: 'Add page for ' + (displayName || 'unknown'),
-    content: encoded,
-    branch: GITHUB_BRANCH
-  }));
-}
+// ========== 腾讯云 SCF 推送服务 ==========
+// 部署云函数后，将下面的 URL 替换为你的 API 网关地址
+var SCF_URL = 'https://service-xxxxx-xxxxx.gz.apigw.tencentcs.com/release/push';
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
 var LOCAL_STORE = {};
@@ -763,39 +701,34 @@ function openReport() {
 
 function genShortLinkAndShow() {
   DATA = collectFormData();
-  var token = _getGithubToken();
-
   showShareDialog('⏳ 正在生成专属页面...');
 
-  // 1. 获取模板
-  _fetchTemplate(function(err, template) {
-    if (err) { console.warn('Template fetch failed:', err); fallbackShareLink(); return; }
-
-    // 2. 填充数据生成页面
-    var html = _fillTemplate(template, DATA);
-
-    // 3. 生成页面ID推送到GitHub
-    var pageId = 'p_' + Math.random().toString(36).slice(2, 8);
-    var pagePath = pageId + '.html';
-
-    _pushToGithub(token, pagePath, html, DATA.name, function(err) {
-      if (err) {
-        console.warn('GitHub push failed:', err);
-        // token可能过期,清除重试
-        if (err.message.indexOf('401') > -1) _setGithubToken('');
-        fallbackShareLink();
-        return;
-      }
-      var url = 'https://' + GITHUB_OWNER + '.github.io/' + GITHUB_REPO + '/' + pagePath;
-      updateShareDialog(url);
-    });
-  });
+  // 调用腾讯云 SCF 推送独立页面到 GitHub
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SCF_URL, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (res.url) { updateShareDialog(res.url); return; }
+      } catch(e) {}
+    }
+    fallbackShareLink();
+  };
+  xhr.onerror = function() { fallbackShareLink(); };
+  xhr.ontimeout = function() { fallbackShareLink(); };
+  xhr.send(JSON.stringify({ data: DATA }));
 }
 
 function fallbackShareLink() {
   var encoded = encodeData(DATA);
   var shareUrl = location.origin + location.pathname + '?d=' + encoded;
-  updateShareDialog(shareUrl);
+  // 先尝试通过 TinyURL 缩短,失败则显示原链接
+  shortenUrl(shareUrl, function(shortUrl) {
+    updateShareDialog(shortUrl, shareUrl);
+  });
 }
 
 // 通过 TinyURL 缩短链接,失败则回退原链接
