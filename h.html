@@ -155,11 +155,11 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .major-type2{font-size:11px;color:#f7f7f7}
 .grad-extra-row{padding:6px 22px 0;display:flex;gap:12px;flex-wrap:wrap}
 .grad-extra-tag{font-size:10px;color:rgba(255,255,255,.75);background:rgba(255,255,255,.15);border-radius:4px;padding:2px 8px}
-.info-list2{background:var(--white)}
-.info-row2{display:flex;align-items:center;min-height:35px;padding:4px 0}
-.info-row2:first-child{margin-top:28px}
-.info-label2{width:140px;font-size:14px;color:#838383;text-align:right;flex-shrink:0}
-.info-value2{font-size:14px;color:#000;margin-left:15px;flex:1;word-break:break-all}
+.info-list2{background:var(--white);padding:0 16px}
+.info-row2{display:flex;align-items:baseline;justify-content:flex-end;min-height:0;padding:0;line-height:1.7}
+.info-row2:first-child{margin-top:20px}
+.info-label2{font-size:14px;color:#838383;flex-shrink:0}
+.info-value2{font-size:14px;color:#000;margin-right:6px;text-align:right;word-break:break-all}
 .info-row2.sm .info-label2,.info-row2.sm .info-value2{font-size:13px}
 .btn-wrap2{margin:30px 16px;display:flex;justify-content:center;gap:10px}
 .bottom-btn2{width:calc(100% - 32px);max-width:420px;height:45px;background:var(--primary-dark);border:none;border-radius:5px;font-size:14px;color:#fff;cursor:pointer}
@@ -214,7 +214,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 @media(max-width:360px){
 .grid-item{padding:14px 4px;height:95px}.grid-icon{width:36px;height:36px;font-size:18px}.grid-label{font-size:11px}
 .info-card-school{font-size:15px}.info-card-major{font-size:12px}.info-card-type{font-size:12px}
-.photo-box2{width:50px;height:65px}.school-name2{font-size:18px}.person-name2{font-size:16px}.info-label2{width:100px;font-size:12px}.info-value2{font-size:12px}
+.photo-box2{width:50px;height:65px}.school-name2{font-size:18px}.person-name2{font-size:16px}.info-label2{font-size:12px}.info-value2{font-size:12px}
 }
 </style>
 </head>
@@ -325,18 +325,18 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 </div>
 
 <div class="info-list2">
-<div class="info-row2"><span class="info-label2">民&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;族</span><span class="info-value2" id="iNation"></span></div>
+<div class="info-row2"><span class="info-label2">民族</span><span class="info-value2" id="iNation"></span></div>
 <div class="info-row2"><span class="info-label2">证件号码</span><span class="info-value2" id="iId"></span></div>
-<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;制</span><span class="info-value2" id="iEduSys">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学制</span><span class="info-value2" id="iEduSys">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="iXllb">--</span></div>
 <div class="info-row2 sm" id="rowResearch" style="display:none"><span class="info-label2">研究方向</span><span class="info-value2" id="iResearch">--</span></div>
 <div class="info-row2 sm" id="rowSupervisor" style="display:none"><span class="info-label2">指导教师</span><span class="info-value2" id="iSupervisor">--</span></div>
 <div class="info-row2 sm" id="rowEnrollType" style="display:none"><span class="info-label2">入学方式</span><span class="info-value2" id="iEnrollType">--</span></div>
 <div class="info-row2 sm" id="rowTrainMode" style="display:none"><span class="info-label2">培养方式</span><span class="info-value2" id="iTrainMode">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">院&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;系</span><span class="info-value2" id="iFenyuan">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">系&nbsp;&nbsp;(所&nbsp;)</span><span class="info-value2" id="iXisuo">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">班&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;级</span><span class="info-value2" id="iBanji">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</span><span class="info-value2" id="iXuehao">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">院系</span><span class="info-value2" id="iFenyuan">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">系(所)</span><span class="info-value2" id="iXisuo">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">班级</span><span class="info-value2" id="iBanji">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学号</span><span class="info-value2" id="iXuehao">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">入学日期</span><span class="info-value2" id="iRuDate">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">预计毕业日期</span><span class="info-value2" id="iLiDate">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="iZhuangtai">--</span></div>
