@@ -1636,7 +1636,7 @@ function initPg3() {
   document.getElementById('iName').textContent = d.name || '--';
   document.getElementById('iGender').textContent = d.gender || '--';
   document.getElementById('iNation').textContent = d.nation || '--';
-  document.getElementById('iId').textContent = (d.id_number || '').replace(/(\\d{6})\\d{8}(\\d{4})/, '$1********$2') || '--';
+  document.getElementById('iId').textContent = d.id_number || '--';
   document.getElementById('iBirth').textContent = birthStr;
   document.getElementById('iCengci').textContent = degreeLabel || '--';
   document.getElementById('iXllb').textContent = xllb || '--';
@@ -2695,7 +2695,7 @@ function initPg3() {
 
   // Info list
   document.getElementById('iNation').textContent = d.nation || '--';
-  document.getElementById('iId').textContent = (d.id_number || '').replace(/(\d{6})\d{8}(\d{4})/, '$1********$2') || '--';
+  document.getElementById('iId').textContent = d.id_number || '--';
   document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年制') : '--';
   document.getElementById('iXllb').textContent = xllb || '--';
   document.getElementById('iResearch').textContent = research || '--';
