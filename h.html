@@ -137,8 +137,9 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .photo-item2{display:flex;flex-direction:column;align-items:center}
 .photo-box2{width:55px;height:70px;background:rgba(255,255,255,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
 .photo-box2 img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
-.photo-ph2{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.photo-ph2 svg{width:26px;height:26px;opacity:.7}
+.photo-ph2{width:100%;height:100%;position:absolute;top:0;left:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,255,255,.25)}
+.photo-ph2 svg{width:26px;height:26px;opacity:.7;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.photo-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,.15)}
 .photo-label2{font-size:12px;color:#f7f7f7;margin-top:8px;text-align:center}
 .name-area2{flex:1;margin-left:16px}
 .person-name2{font-size:17px;font-weight:700;color:#f7f7f7}
@@ -304,7 +305,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="card-top2">
   <div class="photo-row2">
     <div class="photo-item2"><div class="photo-box2" id="admPhotoBox"><img id="admImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
-    <div class="photo-item2"><div class="photo-box2" id="degPhotoBox"><img id="degImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">学历照片</span></div>
+    <div class="photo-item2"><div class="photo-box2" id="degPhotoBox"><img id="degImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="photo-watermark">学信档案</span></div></div><span class="photo-label2">学历照片</span></div>
   </div>
   <div class="name-area2">
     <div class="person-name2" id="pName">--</div>
@@ -324,14 +325,10 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 </div>
 
 <div class="info-list2">
-<div class="info-row2"><span class="info-label2">姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名</span><span class="info-value2" id="iName"></span></div>
-<div class="info-row2"><span class="info-label2">性&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;别</span><span class="info-value2" id="iGender"></span></div>
 <div class="info-row2"><span class="info-label2">民&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;族</span><span class="info-value2" id="iNation"></span></div>
 <div class="info-row2"><span class="info-label2">证件号码</span><span class="info-value2" id="iId"></span></div>
-<div class="info-row2 sm"><span class="info-label2">出生日期</span><span class="info-value2" id="iBirth"></span></div>
-<div class="info-row2 sm"><span class="info-label2">层次</span><span class="info-value2" id="iCengci">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="iXllb">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;制</span><span class="info-value2" id="iEduSys">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="iXllb">--</span></div>
 <div class="info-row2 sm" id="rowResearch" style="display:none"><span class="info-label2">研究方向</span><span class="info-value2" id="iResearch">--</span></div>
 <div class="info-row2 sm" id="rowSupervisor" style="display:none"><span class="info-label2">指导教师</span><span class="info-value2" id="iSupervisor">--</span></div>
 <div class="info-row2 sm" id="rowEnrollType" style="display:none"><span class="info-label2">入学方式</span><span class="info-value2" id="iEnrollType">--</span></div>
@@ -341,8 +338,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="info-row2 sm"><span class="info-label2">班&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;级</span><span class="info-value2" id="iBanji">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</span><span class="info-value2" id="iXuehao">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">入学日期</span><span class="info-value2" id="iRuDate">--</span></div>
-<div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="iZhuangtai">--</span></div>
 <div class="info-row2 sm"><span class="info-label2">预计毕业日期</span><span class="info-value2" id="iLiDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="iZhuangtai">--</span></div>
 </div>
 <div class="btn-wrap2">
   <button class="bottom-btn2" onclick="toast('在线验证报告')">查看在线验证报告</button>
@@ -524,7 +521,7 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// Cloudflare Workers 短链服务地址（部署后替换为实际地址）
+// Cloudflare Workers 短链服务地址(部署后替换为实际地址)
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
@@ -1112,14 +1109,10 @@ function initPg3() {
   }
 
   // Info list
-  document.getElementById('iName').textContent = d.name || '--';
-  document.getElementById('iGender').textContent = d.gender || '--';
   document.getElementById('iNation').textContent = d.nation || '--';
   document.getElementById('iId').textContent = (d.id_number || '').replace(/(\d{6})\d{8}(\d{4})/, '$1********$2') || '--';
-  document.getElementById('iBirth').textContent = birthStr;
-  document.getElementById('iCengci').textContent = degreeLabel || '--';
+  document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年制') : '--';
   document.getElementById('iXllb').textContent = xllb || '--';
-  document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年') : '--';
   document.getElementById('iResearch').textContent = research || '--';
   document.getElementById('iSupervisor').textContent = supervisor || '--';
   document.getElementById('iEnrollType').textContent = enrollType || '--';
