@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,shrink-to-fit=no">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<!-- 微信 X5 浏览器兼容 -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="x5-orientation" content="portrait">
+<meta name="x5-fullscreen" content="true">
+<meta name="x5-page-mode" content="app">
+<!-- 微信分享卡片 -->
+<meta property="og:title" content="学信档案">
+<meta property="og:description" content="查看学籍、学历、学位信息(支持研究生)">
+<meta property="og:type" content="website">
+<meta property="og:image" content="">
+<!-- URL Scheme 防止微信对短链做额外跳转校验 -->
+<meta name="wechat-enable-text-zoom" content="false">
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<title>学信档案</title>
+<script>
+// 注册Service Worker实现离线打开
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/edu-profile/sw.js').catch(function(){});
+}
+</script>
+<style>
+:root{--primary:#09b37d;--primary-dark:#26ae81;--primary-light:#3fc991;--primary-bg:#e8f5e9;--bg:#f5f5f5;--white:#fff;--text:#333;--text-gray:#999;--text-light:#bbb;--red:#f44336;--orange:#f7c044;--blue:#5985ff;--gray:#aaa}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);-webkit-user-select:none;user-select:none;overflow-x:hidden}
+body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* Navbar */
+.nb{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99;width:100%;max-width:450px}
+.nb-spacer{height:20px}
+.nb-main{height:45px;display:flex;align-items:center;position:relative;padding:0 12px}
+.nb-back{width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nb-back svg{width:20px;height:20px}
+.nb-title{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:700}
+.nb-menu{margin-left:auto;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nb-menu-fb{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.nb-menu-fb span{display:block;height:2px;background:#fff;border-radius:1px}
+.nb-menu-fb span:nth-child(1){width:18px}.nb-menu-fb span:nth-child(2){width:14px}.nb-menu-fb span:nth-child(3){width:18px}
+.nb-ph{height:65px}
+
+/* Page1 (xuexin) specific */
+.pg1 .nb{background:var(--primary)}.pg1 .nb-spacer{background:var(--primary)}.pg1 .nb-title{color:#fff}
+.pg1 .nb-left{display:flex;align-items:center;gap:8px}.pg1 .nb-icon{width:28px;height:28px;flex-shrink:0}
+.rec-card{margin:12px 12px;background:var(--white);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.rec-icon-wrap{width:40px;height:40px;border-radius:10px;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rec-icon-wrap svg{width:24px;height:24px}
+.rec-info{flex:1;min-width:0}.rec-title{font-size:14px;font-weight:500;color:var(--text)}
+.rec-btn{flex-shrink:0;padding:6px 18px;background:var(--primary);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer}
+.rec-btn:active{opacity:.8}
+.rec-btn.outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary)}
+.rec-btn.blue{background:var(--blue)}
+.share-bar{margin:0 12px 8px;display:flex;gap:8px}
+.share-bar .rec-btn{flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:13px}
+/* g.html独立展示页:强制隐藏编辑按钮栏 */
+#editBar{display:none !important}
+.grid-sect{margin:0 12px;background:var(--white);border-radius:12px;overflow:hidden}
+.grid-container{display:grid;grid-template-columns:repeat(3,1fr)}
+.grid-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 8px;height:105px;cursor:pointer;transition:background .2s;position:relative}
+.grid-item::after{content:'';position:absolute;right:0;bottom:0;width:100%;height:1px;background:#eee;transform:scaleY(.5)}
+.grid-item::before{content:'';position:absolute;right:0;top:0;width:1px;height:100%;background:#eee;transform:scaleX(.5)}
+.grid-item:nth-child(3n)::before{display:none}
+.grid-item:active{background:#f9f9f9}
+.grid-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;color:#fff;font-weight:700}
+.grid-icon.g1{background:#09b37d}.grid-icon.g2{background:#4ecdc4}
+.grid-icon.g3{background:#5c9be6}.grid-icon.g4{background:#26ae81}
+.grid-icon.g5{background:#5985ff;border-radius:6px;font-size:13px}
+.grid-icon.g6{background:#f7c044}.grid-icon.g7{background:#5985ff}
+.grid-icon.g8{background:#09b37d;border-radius:8px;font-size:12px}
+.grid-label{font-size:12px;color:var(--text);text-align:center;line-height:1.4;max-width:100px}
+.grid-item.edu-link .grid-label{color:var(--primary);font-weight:500}
+
+/* Tabbar */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:450px;height:54px;background:var(--white);display:flex;align-items:center;border-top:1px solid #eee;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tabbar-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--gray);transition:color .2s;padding:6px 0}
+.tabbar-item.active{color:var(--primary)}
+.tabbar-icon{font-size:20px;line-height:1}.tabbar-label{font-size:10px;line-height:1}
+
+/* Page2 (gaodeng) specific */
+.pg2 .nb,.pg2 .nb-spacer{background:var(--white)}.pg2 .nb-title{color:#000}.pg2 .nb-back svg{stroke:#333}
+.sat-card{margin:10px 12px 0;background:var(--white);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.sat-left{flex:1;min-width:0}.sat-header{display:flex;align-items:center;margin-bottom:4px}
+.sat-title{font-size:14px;font-weight:700;color:var(--text)}
+.sat-badge{background:var(--red);border-radius:3px;padding:2px 8px;margin-left:8px;font-size:10px;color:#fff;cursor:pointer}
+.sat-desc{font-size:11px;color:var(--text-gray)}
+.sat-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.sat-tag{background:var(--primary-bg);border-radius:10px;padding:4px 12px;font-size:11px;color:var(--primary);cursor:pointer}
+.edu-block{margin:15px 12px 0}
+.edu-block-header{display:flex;align-items:center;margin-bottom:10px}
+.edu-block-title{font-size:16px;font-weight:700;color:var(--text)}
+.edu-block-badge{background:var(--primary);color:#fff;border-radius:3px;padding:2px 8px;margin-left:8px;font-size:10px}
+.edu-block-badge.master{background:var(--blue)}
+.edu-block-badge.doctor{background:#e040fb}
+.info-sect{margin:0}
+.sect-header{display:flex;align-items:center;margin-bottom:10px}
+.sect-title{font-size:15px;font-weight:700;color:var(--text)}
+.sect-count{font-size:13px;color:var(--primary);margin-left:6px}
+.sect-action{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:4px}
+.sect-action-text{font-size:11px;color:var(--text-light)}.sect-action-link{font-size:11px;color:var(--primary);cursor:pointer}
+.info-card{border-radius:12px;overflow:hidden;box-shadow:0 3px 10px #d0d0d0;cursor:pointer;transition:transform .15s,box-shadow .15s;margin-bottom:12px}
+.info-card:active{transform:scale(.985);box-shadow:0 1px 6px #c0c0c0}
+.info-card-top{background:linear-gradient(to bottom,#26ae81,#3fc991);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between}
+.info-card.master-card .info-card-top{background:linear-gradient(to bottom,#3d6af5,#5985ff)}
+.info-card.doctor-card .info-card-top{background:linear-gradient(to bottom,#9c27b0,#ce93d8)}
+.info-card-school{font-size:17px;font-weight:700;color:#fff;flex:1;margin-right:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info-card-degree{background:rgba(0,0,0,.25);border-radius:50px;padding:4px 12px;font-size:12px;color:#fff;flex-shrink:0}
+.info-card-bottom{background:rgba(38,174,129,.88);padding:10px 16px;display:flex;align-items:center}
+.master-card .info-card-bottom{background:rgba(61,106,245,.88)}
+.doctor-card .info-card-bottom{background:rgba(156,39,176,.88)}
+.info-card-major{font-size:13px;color:#f0f0f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info-card-dv{width:1px;height:14px;background:rgba(255,255,255,.45);margin:0 12px;flex-shrink:0}
+.info-card-type{font-size:13px;color:#f0f0f0;flex-shrink:0}
+.info-card-sub{font-size:11px;color:#ddd;margin-top:2px}
+.empty-card{background:var(--white);border-radius:12px;padding:20px 16px;display:flex;flex-direction:column;align-items:center}
+.empty-text{font-size:13px;color:var(--text-gray);text-align:center;line-height:1.8}
+.empty-link{font-size:13px;color:var(--primary);margin-top:8px;cursor:pointer}
+
+/* Page3 (share) specific */
+.pg3 .nb,.pg3 .nb-spacer{background:var(--bg)}.pg3 .nb-title{color:#000}.pg3 .nb-back svg{stroke:#000}
+.pg3 .nb-spacer{height:0}
+.level-tabs{display:flex;margin:12px 16px 0;background:var(--white);border-radius:10px;overflow:hidden}
+.level-tab{flex:1;text-align:center;padding:12px 0;font-size:14px;font-weight:500;color:var(--text-gray);cursor:pointer;position:relative;transition:all .2s}
+.level-tab.active{color:var(--primary);font-weight:700}
+.level-tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2.5px;background:var(--primary);border-radius:2px}
+.level-tab:not(:last-child)::before{content:'';position:absolute;right:0;top:25%;height:50%;width:1px;background:#eee}
+.main-card{width:calc(100% - 32px);max-width:420px;margin:12px auto 8px;background:linear-gradient(to bottom,#26ae81,#3fc991);border-radius:10px;padding-bottom:18px;box-shadow:0 3px 10px #bababa}
+.main-card.master{background:linear-gradient(to bottom,#3d6af5,#5985ff)}
+.main-card.doctor{background:linear-gradient(to bottom,#9c27b0,#ce93d8)}
+.card-top2{display:flex;align-items:flex-start;padding:20px 16px 0}
+.photo-row2{display:flex;gap:8px}
+.photo-item2{display:flex;flex-direction:column;align-items:center}
+.photo-box2{width:55px;height:70px;background:rgba(255,255,255,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.photo-box2 img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.photo-ph2{width:100%;height:100%;position:absolute;top:0;left:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,255,255,.25)}
+.photo-ph2 svg{width:26px;height:26px;opacity:.7;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.photo-label2{font-size:12px;color:#f7f7f7;margin-top:8px;text-align:center}
+.name-area2{flex:1;margin-left:16px}
+.person-name2{font-size:17px;font-weight:700;color:#f7f7f7}
+.person-extra2{display:flex;align-items:center;margin-top:10px;gap:8px}
+.person-gender2{font-size:13px;color:#f7f7f7}
+.person-birth2{font-size:13px;color:#f7f7f7}
+.school-row2{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 0}
+.school-name2{font-size:20px;font-weight:700;color:#fff;flex:1;margin-right:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.school-degree2{background:rgba(0,0,0,.3);border-radius:50px;padding:5px 14px;font-size:11px;color:#f7f7f7;flex-shrink:0;white-space:nowrap}
+.major-row2{display:flex;align-items:center;padding:10px 22px 0}
+.major-name2{font-size:11px;color:#f7f7f7}
+.major-dv2{width:1px;height:13px;background:#f7f7f7;margin:0 15px}
+.major-type2{font-size:11px;color:#f7f7f7}
+.grad-extra-row{padding:6px 22px 0;display:flex;gap:12px;flex-wrap:wrap}
+.grad-extra-tag{font-size:10px;color:rgba(255,255,255,.75);background:rgba(255,255,255,.15);border-radius:4px;padding:2px 8px}
+.info-list2{background:var(--white);padding:0 16px}
+.info-row2{display:flex;align-items:center;min-height:35px;padding:4px 0}
+.info-row2:first-child{margin-top:28px}
+.info-label2{width:140px;font-size:14px;color:#838383;text-align:right;flex-shrink:0}
+.info-value2{font-size:14px;color:#000;margin-left:15px;flex:1;word-break:break-all}
+.info-row2.sm .info-label2,.info-row2.sm .info-value2{font-size:13px}
+.btn-wrap2{margin:30px 16px;display:flex;justify-content:center;gap:10px}
+.bottom-btn2{width:calc(100% - 32px);max-width:420px;height:45px;background:var(--primary-dark);border:none;border-radius:5px;font-size:14px;color:#fff;cursor:pointer}
+.bottom-btn2:active{opacity:.8}
+.bottom-btn2.secondary{background:#666}
+
+/* Page4 (form) specific */
+.pg4 .nb,.pg4 .nb-spacer{background:var(--white)}.pg4 .nb-title{color:#000}.pg4 .nb-back svg{stroke:#333}
+.form-container{padding:12px 16px 100px}
+.form-section{background:var(--white);border-radius:12px;padding:16px;margin-bottom:12px}
+.form-section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:6px}
+.form-section-title .icon{font-size:18px}
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+.form-label{font-size:13px;color:var(--text);margin-bottom:6px;display:block;font-weight:500}
+.form-label .req{color:var(--red);margin-left:2px}
+.form-input,.form-select{width:100%;height:40px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:14px;color:var(--text);background:#fafafa;outline:none;transition:border .2s}
+.form-input:focus,.form-select:focus{border-color:var(--primary);background:var(--white)}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+.toggle-section{margin-bottom:12px}
+.toggle-header{display:flex;align-items:center;justify-content:space-between;background:var(--white);border-radius:12px;padding:14px 16px;cursor:pointer}
+.toggle-header-left{display:flex;align-items:center;gap:8px}
+.toggle-title{font-size:14px;font-weight:600;color:var(--text)}
+.toggle-hint{font-size:11px;color:var(--text-gray)}
+.toggle-arrow{font-size:14px;color:var(--text-gray);transition:transform .25s}
+.toggle-section.open .toggle-arrow{transform:rotate(90deg)}
+.toggle-body{display:none}
+.toggle-section.open .toggle-body{display:block;margin-top:12px}
+.grad-type-tabs{display:flex;gap:8px;margin-bottom:14px}
+.grad-type-tab{flex:1;text-align:center;padding:10px 0;border-radius:8px;border:1.5px solid #ddd;font-size:13px;cursor:pointer;color:var(--text-gray);transition:all .2s}
+.grad-type-tab.active{border-color:var(--blue);color:var(--blue);background:#f0f4ff}
+.upload-row{display:flex;gap:8px;align-items:center}
+.upload-input{flex:1}
+.upload-btn{width:44px;height:44px;border:2px dashed #ccc;border-radius:10px;background:#fafafa;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s}
+.upload-btn:hover{border-color:var(--primary)}
+.form-submit{width:100%;height:48px;background:var(--primary);border:none;border-radius:12px;font-size:16px;font-weight:600;color:#fff;cursor:pointer;margin-top:8px}
+.form-submit:active{opacity:.85}
+.form-submit.secondary{background:var(--blue)}
+.form-preview{margin-top:12px;background:#fffbe6;border:1px solid #ffe082;border-radius:10px;padding:12px;display:none}
+.form-preview.show{display:block}
+.form-preview-title{font-size:13px;font-weight:600;color:#f57f17;margin-bottom:8px}
+.form-preview-link{width:100%;word-break:break-all;font-size:11px;color:#666;background:#fff;border:1px solid #eee;border-radius:6px;padding:8px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.copy-btn{margin-top:8px;padding:6px 16px;background:var(--orange);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+.copy-btn:active{opacity:.8}
+.copy-ok{color:var(--primary);font-size:12px;margin-left:8px;display:none}
+
+/* Toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);background:rgba(17,17,17,.8);color:#fff;padding:10px 24px;border-radius:6px;font-size:14px;z-index:999;pointer-events:none;opacity:0;transition:all .25s}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+@media(max-width:360px){
+.grid-item{padding:14px 4px;height:95px}.grid-icon{width:36px;height:36px;font-size:18px}.grid-label{font-size:11px}
+.info-card-school{font-size:15px}.info-card-major{font-size:12px}.info-card-type{font-size:12px}
+.photo-box2{width:50px;height:65px}.school-name2{font-size:18px}.person-name2{font-size:16px}.info-label2{width:100px;font-size:12px}.info-value2{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: 学信档案 ============ -->
+<div class="page pg1 active" id="pg1">
+<nav class="nb"><div class="nb-spacer"></div><div class="nb-main">
+<div class="nb-left"><svg class="nb-icon" viewBox="0 0 1024 1024" fill="#fff"><path d="M819.2 143.018667L753.493333 102.4l-81.92 49.152L573.013333 102.4 491.52 151.552 409.941333 102.4l-81.92 49.152L246.613333 102.4 204.8 133.973333V785.066667l41.813333 30.72 81.92-49.152L409.941333 819.2l81.578667-49.152L573.013333 819.2l81.578667-51.2L736.426667 819.2l81.578666-49.152L819.2 785.066667z"/><path d="M368.64 409.6h286.72v40.96H368.64zM368.64 512h286.72v40.96H368.64zM368.64 614.4h163.84v40.96H368.64z" fill="#09b37d"/></svg><span class="nb-title">学信档案</span></div>
+<div class="nb-menu" onclick="toast('菜单功能')"><div class="nb-menu-fb"><span></span><span></span><span></span></div></div>
+</div></nav><div class="nb-ph"></div>
+
+<div class="rec-card" onclick="toast('功能开发中,敬请期待')"><div class="rec-icon-wrap"><svg width="24" height="24" viewBox="0 0 1024 1024" fill="#fff"><path d="M819.2 143.018667L753.493333 102.4l-81.92 49.152L573.013333 102.4 491.52 151.552 409.941333 102.4l-81.92 49.152L246.613333 102.4 204.8 133.973333V785.066667l41.813333 30.72 81.92-49.152L409.941333 819.2l81.578667-49.152L573.013333 819.2l81.578667-51.2L736.426667 819.2l81.578666-49.152L819.2 785.066667z"/><path d="M368.64 409.6h286.72v40.96H368.64zM368.64 512h286.72v40.96H368.64zM368.64 614.4h163.84v40.96H368.64z" fill="#09b37d"/></svg></div><div class="rec-info"><div class="rec-title">合作意识测试</div></div><button class="rec-btn">去测评</button></div>
+
+<div class="share-bar" id="editBar" style="display:none">
+  <button class="rec-btn blue" onclick="navTo('pg4')">📝 填写/编辑信息</button>
+  <button class="rec-btn outline" onclick="genShareLink()">🔗 生成分享链接</button>
+  <button class="rec-btn outline" id="reportBtn" onclick="openReport()" style="display:none">📄 查看备案表</button>
+</div>
+
+<div class="grid-sect"><div class="grid-container">
+<div class="grid-item edu-link" onclick="navTo('pg2')"><div class="grid-icon g1">🎓</div><span class="grid-label">高等教育信息</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g1">🛡️</div><span class="grid-label">在线验证报告</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g2">📄</div><span class="grid-label">学历学位认证与成绩验证</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g3">🌐</div><span class="grid-label">出国(境)报告发送</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g4">👤</div><span class="grid-label">毕业证书图像校对</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g5">Offer</div><span class="grid-label">就业</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g6">😊</div><span class="grid-label">学校满意度</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g7">📋</div><span class="grid-label">个人测评</span></div>
+<div class="grid-item" onclick="toast('功能开发中,敬请期待')"><div class="grid-icon g8">双千</div><span class="grid-label">"双千"计划"微专业"</span></div>
+</div></div>
+
+<div class="tabbar" id="tabbar1">
+<div class="tabbar-item active"><span class="tabbar-icon">⌂</span><span class="tabbar-label">首页</span></div>
+<div class="tabbar-item" onclick="toast('切换到:学籍学历学位')"><span class="tabbar-icon">🎓</span><span class="tabbar-label">学籍学历学位</span></div>
+<div class="tabbar-item" onclick="toast('切换到:个人测评')"><span class="tabbar-icon">📋</span><span class="tabbar-label">个人测评</span></div>
+<div class="tabbar-item" onclick="toast('切换到:求职招聘')"><span class="tabbar-icon">💼</span><span class="tabbar-label">求职招聘</span></div>
+<div class="tabbar-item" onclick="toast('切换到:我的')"><span class="tabbar-icon">👤</span><span class="tabbar-label">我的</span></div>
+</div>
+</div>
+
+<!-- ============ PAGE 2: 高等教育信息 ============ -->
+<div class="page pg2" id="pg2">
+<nav class="nb"><div class="nb-spacer"></div><div class="nb-main">
+<div class="nb-back" onclick="backTo('pg1')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+<span class="nb-title">高等教育信息</span>
+</div></nav><div class="nb-ph"></div>
+
+<div class="sat-card"><div class="sat-left"><div class="sat-header"><span class="sat-title">院校满意度</span><span class="sat-badge" onclick="toast('投票功能')">投票</span></div><span class="sat-desc">本校的生活条件、环境及综合情况</span></div><div class="sat-right"><span class="sat-tag" onclick="toast('综合情况')">综合情况</span><span class="sat-tag" onclick="toast('生活条件')">生活条件</span><span class="sat-tag" onclick="toast('校园环境')">校园环境</span></div></div>
+
+<div class="edu-block" id="undergradBlock">
+<div class="edu-block-header"><span class="edu-block-title" id="ugBlockTitle">本科教育</span></div>
+  <div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count" id="ugXjCount">(1)</span><div class="sect-action"><span class="sect-action-text">还有学籍没有显示出来?</span><span class="sect-action-link" onclick="toast('尝试绑定学籍')">尝试绑定</span></div></div>
+<div class="info-card" id="ugXjCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div></div>
+  <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
+<div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
+  <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
+<div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+</div>
+
+<!-- 研究生教育 -->
+<div class="edu-block" id="gradBlock">
+<div class="edu-block-header"><span class="edu-block-title" id="gradBlockTitle">研究生教育</span><span class="edu-block-badge" id="gradBlockBadge">硕士</span></div>
+<div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count">(1)</span></div>
+<div class="info-card master-card" id="gradXjCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxjSchool">--</span><span class="info-card-degree" id="gxjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxjType">--</span></div></div>
+<div class="empty-card" id="gradXjEmpty" style="display:none"><span class="empty-text">暂无研究生学籍信息</span></div></div>
+<div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count">(1)</span></div>
+<div class="info-card master-card" id="gradXlCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxlSchool">--</span><span class="info-card-degree" id="gxlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxlType">--</span></div></div>
+<div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
+<div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
+<div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+</div>
+</div>
+
+<!-- ============ PAGE 3: 学籍详情 ============ -->
+<div class="page pg3" id="pg3">
+<nav class="nb"><div class="nb-spacer" id="nbSp3"></div><div class="nb-main">
+<div class="nb-back" onclick="backTo('pg2')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+<span class="nb-title">学籍信息</span>
+</div></nav><div class="nb-ph" id="nbPh3"></div>
+
+<div class="level-tabs" id="levelTabs">
+  <div class="level-tab active" data-idx="0" id="ugLevelTab">本科</div>
+  <div class="level-tab" data-idx="1" id="gradTab" style="display:none">硕士</div>
+</div>
+
+<div class="main-card" id="detailCard">
+<div class="card-top2">
+  <div class="photo-row2">
+    <div class="photo-item2"><div class="photo-box2" id="admPhotoBox"><img id="admImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
+    <div class="photo-item2"><div class="photo-box2" id="degPhotoBox"><img id="degImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">学历照片</span></div>
+  </div>
+  <div class="name-area2">
+    <div class="person-name2" id="pName">--</div>
+    <div class="person-extra2">
+      <span class="person-gender2" id="pGender">--</span>
+      <span class="person-birth2" id="pBirth">--</span>
+    </div>
+  </div>
+</div>
+<div class="school-row2"><span class="school-name2" id="sName">--</span><span class="school-degree2" id="sDegree">--</span></div>
+<div class="major-row2"><span class="major-name2" id="mName">--</span><span class="major-dv2"></span><span class="major-type2" id="mType">--</span></div>
+<div class="grad-extra-row" id="gradExtraRow" style="display:none">
+  <span class="grad-extra-tag" id="gTag1"></span>
+  <span class="grad-extra-tag" id="gTag2"></span>
+  <span class="grad-extra-tag" id="gTag3"></span>
+</div>
+</div>
+
+<div class="info-list2">
+<div class="info-row2"><span class="info-label2">民族</span><span class="info-value2" id="iNation"></span></div>
+<div class="info-row2"><span class="info-label2">证件号码</span><span class="info-value2" id="iId"></span></div>
+<div class="info-row2 sm"><span class="info-label2">学制</span><span class="info-value2" id="iEduSys">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="iXllb">--</span></div>
+<div class="info-row2 sm" id="rowResearch" style="display:none"><span class="info-label2">研究方向</span><span class="info-value2" id="iResearch">--</span></div>
+<div class="info-row2 sm" id="rowSupervisor" style="display:none"><span class="info-label2">指导教师</span><span class="info-value2" id="iSupervisor">--</span></div>
+<div class="info-row2 sm" id="rowEnrollType" style="display:none"><span class="info-label2">入学方式</span><span class="info-value2" id="iEnrollType">--</span></div>
+<div class="info-row2 sm" id="rowTrainMode" style="display:none"><span class="info-label2">培养方式</span><span class="info-value2" id="iTrainMode">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">院系</span><span class="info-value2" id="iFenyuan">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">系(所)</span><span class="info-value2" id="iXisuo">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">班级</span><span class="info-value2" id="iBanji">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学号</span><span class="info-value2" id="iXuehao">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">入学日期</span><span class="info-value2" id="iRuDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">预计毕业日期</span><span class="info-value2" id="iLiDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="iZhuangtai">--</span></div>
+</div>
+<div class="btn-wrap2">
+  <button class="bottom-btn2" onclick="toast('在线验证报告')">查看在线验证报告</button>
+</div>
+<div class="bspacer2" style="height:15px"></div>
+</div>
+
+<!-- ============ PAGE 4: 信息填写 ============ -->
+<div class="page pg4" id="pg4">
+<nav class="nb"><div class="nb-spacer"></div><div class="nb-main">
+<div class="nb-back" onclick="backTo('pg1')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+<span class="nb-title">填写/编辑信息</span>
+</div></nav><div class="nb-ph"></div>
+
+<div class="form-container">
+  <div class="form-section">
+    <div class="form-section-title"><span class="icon">👤</span>基本信息</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">姓名<span class="req">*</span></label><input class="form-input" id="fName" placeholder="请输入姓名"></div>
+      <div class="form-group"><label class="form-label">性别</label><select class="form-select" id="fGender"><option value="男">男</option><option value="女">女</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">民族</label><input class="form-input" id="fNation" placeholder="汉族"></div>
+      <div class="form-group"><label class="form-label">出生日期</label><input class="form-input" id="fBirth" placeholder="2000-01-01" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">证件号码</label><input class="form-input" id="fId" placeholder="身份证号码"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><span class="icon">🎓</span>本科/专科信息<span class="req">*</span></div>
+    <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fSchool" placeholder="请输入学校名称"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学历层次</label><select class="form-select" id="fDegree"><option value="本科">本科</option><option value="专科">专科</option><option value="专升本">专升本</option></select></div>
+      <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fEduSys"><option value="4">4</option><option value="5">5</option><option value="3">3</option><option value="2">2</option><option value="2.5">2.5</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fMajor" placeholder="请输入专业名称"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学习形式</label><select class="form-select" id="fXlType"><option value="普通全日制">普通全日制</option><option value="非全日制">非全日制</option><option value="成人高等教育">成人高等教育</option><option value="网络教育">网络教育</option></select></div>
+      <div class="form-group"><label class="form-label">学历类别</label><select class="form-select" id="fXllb"><option value="普通高等教育">普通高等教育</option><option value="成人高等教育">成人高等教育</option><option value="高等教育自学考试">高等教育自学考试</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">院系</label><input class="form-input" id="fFenyuan" placeholder="如:信息科学技术学院"></div>
+      <div class="form-group"><label class="form-label">系(所)</label><input class="form-input" id="fXisuo" placeholder="如:计算机系"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">班级</label><input class="form-input" id="fBanji" placeholder="如:计科235班"></div>
+      <div class="form-group"><label class="form-label">学号</label><input class="form-input" id="fXuehao" placeholder="学号"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">入学日期</label><input class="form-input" id="fRuDate" type="date"></div>
+      <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fLiDate" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option><option value="肄业">肄业</option></select></div>
+    <div class="form-group">
+      <label class="form-label">录取照片 (可选)</label>
+      <div class="upload-row">
+        <input class="form-input upload-input" id="fImgA" placeholder="粘贴图片链接 或 点击右侧上传">
+        <input type="file" accept="image/*" id="fImgA_file" style="display:none" onchange="handleImgUpload(this,'fImgA')">
+        <button type="button" class="upload-btn" onclick="document.getElementById('fImgA_file').click()">📷</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">学历照片 (可选)</label>
+      <div class="upload-row">
+        <input class="form-input upload-input" id="fImgB" placeholder="粘贴图片链接 或 点击右侧上传">
+        <input type="file" accept="image/*" id="fImgB_file" style="display:none" onchange="handleImgUpload(this,'fImgB')">
+        <button type="button" class="upload-btn" onclick="document.getElementById('fImgB_file').click()">📷</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 研究生信息(可选) -->
+  <div class="toggle-section" id="toggleGrad">
+    <div class="toggle-header" onclick="toggleGradSection()">
+      <div class="toggle-header-left">
+        <span class="toggle-title" id="gradToggleTitle">📚 硕士研究生信息 (可选)</span>
+        <span class="toggle-hint">点击展开填写</span>
+      </div>
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-body">
+      <div class="form-section" style="margin-bottom:0">
+        <div class="grad-type-tabs">
+          <div class="grad-type-tab active" data-gtype="硕士" onclick="switchGradType('硕士',this)">硕士研究生</div>
+          <div class="grad-type-tab" data-gtype="博士" onclick="switchGradType('博士',this)">博士研究生</div>
+        </div>
+        <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fGSchool" placeholder="请输入研究生学校名称"></div>
+        <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fGMajor" placeholder="请输入研究生专业名称"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">学位类型</label><select class="form-select" id="fGDegreeType"><option value="学术型">学术型</option><option value="专业型">专业型</option></select></div>
+          <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fGEduSys"><option value="3">3</option><option value="2">2</option><option value="2.5">2.5</option><option value="4">4</option><option value="5">5</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">入学方式</label><select class="form-select" id="fGEnrollType"><option value="全国统考">全国统考</option><option value="推荐免试">推荐免试</option><option value="单独考试">单独考试</option><option value="申请考核">申请考核</option></select></div>
+          <div class="form-group"><label class="form-label">培养方式</label><select class="form-select" id="fGTrainMode"><option value="全日制">全日制</option><option value="非全日制">非全日制</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">研究方向</label><input class="form-input" id="fGResearch" placeholder="如:人工智能、机器学习"></div>
+        <div class="form-group"><label class="form-label">指导教师(导师)</label><input class="form-input" id="fGSupervisor" placeholder="导师姓名"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">院系</label><input class="form-input" id="fGFenyuan" placeholder="研究生所在院系"></div>
+          <div class="form-group"><label class="form-label">学号</label><input class="form-input" id="fGXuehao" placeholder="研究生学号"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">入学日期</label><input class="form-input" id="fGRuDate" type="date"></div>
+          <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fGLiDate" type="date"></div>
+        </div>
+        <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fGStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option></select></div>
+        <div class="form-group">
+          <label class="form-label">录取照片 (可选)</label>
+          <div class="upload-row">
+            <input class="form-input upload-input" id="fGImgA" placeholder="粘贴图片链接 或 点击右侧上传">
+            <input type="file" accept="image/*" id="fGImgA_file" style="display:none" onchange="handleImgUpload(this,'fGImgA')">
+            <button type="button" class="upload-btn" onclick="document.getElementById('fGImgA_file').click()">📷</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">学历照片 (可选)</label>
+          <div class="upload-row">
+            <input class="form-input upload-input" id="fGImgB" placeholder="粘贴图片链接 或 点击右侧上传">
+            <input type="file" accept="image/*" id="fGImgB_file" style="display:none" onchange="handleImgUpload(this,'fGImgB')">
+            <button type="button" class="upload-btn" onclick="document.getElementById('fGImgB_file').click()">📷</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="form-submit" onclick="submitForm()">✅ 保存信息并生成分享链接</button>
+  <button class="form-submit secondary" style="margin-top:8px" onclick="submitAndPreview()">👁️ 预览效果</button>
+  <button class="form-submit secondary" style="margin-top:8px;background:#28a745" onclick="openReport()">📄 查看电子注册备案表</button>
+
+  <div class="form-preview" id="formPreview">
+    <div class="form-preview-title">🔗 TinyURL 短链接 <span id="shortLinkSpinner" style="font-size:11px;color:#999;font-weight:normal">(缩短中...)</span></div>
+    <div class="form-preview-link" id="shortLinkText"></div>
+    <div id="shortLinkWrap">
+      <button class="copy-btn" onclick="copyShortLink()">📋 复制</button>
+      <span class="copy-ok" id="copyOk">已复制!</span>
+    </div>
+    <div style="margin-top:6px;font-size:11px;color:#999">⚡ 通过 TinyURL 生成 · 极短 · 跨设备可打开</div>
+
+    <div class="form-preview-title" style="margin-top:18px">📎 原始链接(备选)</div>
+    <div class="form-preview-link" id="fullLinkText" style="font-size:10px"></div>
+    <button class="copy-btn" onclick="copyFullLink()">📋 复制</button>
+    <span class="copy-ok" id="fullCopyOk">已复制!</span>
+    <div style="margin-top:6px;font-size:11px;color:#999">🌐 任意设备可打开 · 数据自包含</div>
+
+    <div style="margin-top:10px;font-size:11px;color:#999;line-height:1.6">
+      💡 <b>微信打开方法:</b>复制链接后,在微信聊天框中粘贴发送,直接点击即可打开.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DEFAULT DATA ==========
+
+var DEFAULT_DATA = {
+  "name": "施家豪",
+  "gender": "男",
+  "nation": "汉族",
+  "school": "福建师范大学",
+  "major": "新能源科学与工程",
+  "xltype": "普通全日制",
+  "academic_qualification": "本科",
+  "educational_system": "4",
+  "xllb": "普通高等教育",
+  "fenyuan": "材料工程学院",
+  "xisuo": "材料工程",
+  "banji": "材料181",
+  "xuehao": "2512321",
+  "zhuangtai": "在籍(注册学籍)",
+  "ru_nian": "2023",
+  "ru_yue": "09",
+  "ru_ri": "01",
+  "li_nian": "2027",
+  "li_yue": "06",
+  "li_ri": "30",
+  "nian": "",
+  "yue": "",
+  "ri": "",
+  "image_a": "data:image/jpeg;base64,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",
+  "image_b": "",
+  "has_grad": false,
+  "grad_level": "硕士",
+  "grad_school": "",
+  "grad_major": "",
+  "grad_degree_type": "学术型",
+  "grad_educational_system": "3",
+  "grad_enroll_type": "全国统考",
+  "grad_train_mode": "全日制",
+  "grad_research": "",
+  "grad_supervisor": "",
+  "grad_fenyuan": "",
+  "grad_xuehao": "",
+  "grad_zhuangtai": "在籍(注册学籍)",
+  "grad_ru_nian": "",
+  "grad_ru_yue": "09",
+  "grad_ru_ri": "01",
+  "grad_li_nian": "",
+  "grad_li_yue": "06",
+  "grad_li_ri": "30",
+  "grad_image_a": "",
+  "grad_image_b": "",
+  "id_number": "420625200310016812"
+};
+var DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+// Cloudflare Workers 短链服务地址（部署后替换为实际地址）
+var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
+
+// 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
+var LOCAL_STORE = {};
+try {
+  var saved = localStorage.getItem('edu_local_store');
+  if (saved) LOCAL_STORE = JSON.parse(saved);
+} catch(e) {}
+
+function saveLocalStore() {
+  try { localStorage.setItem('edu_local_store', JSON.stringify(LOCAL_STORE)); } catch(e) {}
+}
+
+function genLocalId(len) {
+  var s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var id = '';
+  for (var i = 0; i < len; i++) id += s[Math.floor(Math.random() * s.length)];
+  return id;
+}
+
+// ========== URL DATA ENCODING (LZString + base64 fallback) ==========
+function encodeData(obj) {
+  var json = JSON.stringify(obj);
+  // 优先使用 LZString 压缩(对含图片数据大幅压缩)
+  if (typeof LZString !== 'undefined' && LZString.compressToEncodedURIComponent) {
+    try {
+      return LZString.compressToEncodedURIComponent(json);
+    } catch(e) {}
+  }
+  // Fallback: base64 URL-safe
+  var encoded = btoa(unescape(encodeURIComponent(json)));
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function decodeData(str) {
+  // 优先尝试 LZString 解压
+  if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+    try {
+      var result = LZString.decompressFromEncodedURIComponent(str);
+      if (result && result.length > 0 && (result[0] === '{' || result[0] === '[')) {
+        return JSON.parse(result);
+      }
+    } catch(e) {}
+  }
+  // Fallback: base64 解码(兼容旧链接)
+  try {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    var json = decodeURIComponent(escape(atob(str)));
+    return JSON.parse(json);
+  } catch(e) {
+    return null;
+  }
+}
+
+function loadDataFromURL() {
+  var params = new URLSearchParams(window.location.search);
+
+  // 新格式: ?q=ID.压缩数据 (单参数,更简洁)
+  var q = params.get('q');
+  if (q && q.length > 4) {
+    var dotIdx = q.indexOf('.');
+    if (dotIdx > 0) {
+      var dataPart = q.substring(dotIdx + 1);
+      if (dataPart.length > 4) {
+        var data = decodeData(dataPart);
+        if (data) { console.log('[app] 从?q=加载数据成功'); return data; }
+      }
+    } else {
+      // ?q=无点分隔,尝试直接解码(兼容纯数据格式)
+      var data = decodeData(q);
+      if (data) { console.log('[app] 从?q=加载数据成功'); return data; }
+    }
+  }
+
+  // 旧格式兼容: ?d=
+  var d = params.get('d');
+  if (!d) {
+    var hash = window.location.hash;
+    var m = hash.match(/[?&]d=([^&]+)/);
+    if (m) d = m[1];
+  }
+  if (d && d.length > 4) {
+    var data = decodeData(d);
+    if (data) { console.log('[app] 从?d=加载数据成功(旧格式)'); return data; }
+  }
+  return null;
+}
+
+function buildShareURL() {
+  // 完整跨设备链接
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
+  saveLocalStore();
+  var encoded = encodeData(DATA);
+  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
+}
+
+function getOfflineUrl() {
+  // 极短链接:ID+压缩数据,跨设备可用
+  var id = genLocalId(8);
+  LOCAL_STORE[id] = DATA;
+  saveLocalStore();
+  var encoded = encodeData(DATA);
+  return window.location.origin + window.location.pathname + '?q=' + id + '.' + encoded;
+}
+
+function saveShortLink(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', WORKER_URL + '/api/save', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (res.id) callback(null, res.id);
+        else callback(new Error('无效响应'));
+      } catch(e) { callback(e); }
+    } else {
+      callback(new Error('HTTP ' + xhr.status));
+    }
+  };
+  xhr.onerror = function() { callback(new Error('网络错误')); };
+  // 用 LZString 压缩数据(图片base64可大幅压缩),避免超出Worker 128KB请求限制
+  var payload = { data: DATA };
+  if (typeof LZString !== 'undefined' && LZString.compressToEncodedURIComponent) {
+    try {
+      payload.compressed = LZString.compressToEncodedURIComponent(JSON.stringify(DATA));
+      delete payload.data; // 压缩后不再传原始data
+    } catch(e) {}
+  }
+  xhr.send(JSON.stringify(payload));
+}
+
+function updateShareDialog(shortUrl, fullUrl) {
+  document.getElementById('shortLinkText').textContent = shortUrl;
+  document.getElementById('shortLinkSpinner').style.display = 'none';
+  document.getElementById('shortLinkWrap').style.display = '';
+  document.getElementById('fullLinkText').textContent = fullUrl || shortUrl;
+}
+
+function genShareLink() {
+  genShortLinkAndShow();
+}
+
+function openReport() {
+  var params = new URLSearchParams(window.location.search);
+  // 优先使用新格式 ?q=
+  var qParam = params.get('q');
+  var reportUrl = 'report.html';
+  if (qParam) {
+    reportUrl += '?q=' + qParam;
+  } else {
+    // 旧格式兼容
+    var sParam = params.get('s');
+    var dParam = params.get('d');
+    if (sParam && dParam) {
+      reportUrl += '?s=' + sParam + '&d=' + dParam;
+    } else if (dParam) {
+      reportUrl += '?d=' + dParam;
+    } else if (sParam) {
+      reportUrl += '?s=' + sParam;
+    }
+  }
+  window.open(reportUrl, '_blank');
+}
+
+function genShortLinkAndShow() {
+  DATA = collectFormData();
+  showShareDialog('⏳ 正在生成短链接...');
+
+  saveShortLink(function(err, id) {
+    if (err) {
+      var fullUrl = getOfflineUrl();
+      updateShareDialog(fullUrl);
+      return;
+    }
+    var shortUrl = WORKER_URL + '/s/' + id;
+    var fullUrl = window.location.origin + window.location.pathname + '?q=' + id;
+    updateShareDialog(shortUrl, fullUrl);
+  });
+}
+
+// 通过 TinyURL 缩短链接,失败则回退原链接
+function shortenUrl(longUrl, callback) {
+  var encoded = encodeURIComponent(longUrl);
+
+  // 方式1: 直接调用 TinyURL API
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://tinyurl.com/api-create.php?url=' + encoded, true);
+    xhr.timeout = 8000;
+    xhr.onload = function() {
+      if (xhr.status === 200 && xhr.responseText && xhr.responseText.indexOf('http') === 0) {
+        callback(xhr.responseText.trim());
+      } else {
+        tryProxy();
+      }
+    };
+    xhr.onerror = tryProxy;
+    xhr.ontimeout = tryProxy;
+    xhr.send();
+  } catch(e) { tryProxy(); }
+
+  function tryProxy() {
+    // 方式2: 通过 CORS 代理中转
+    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
+      'https://tinyurl.com/api-create.php?url=' + encoded
+    );
+    var pxhr = new XMLHttpRequest();
+    pxhr.open('GET', proxyUrl, true);
+    pxhr.timeout = 10000;
+    pxhr.onload = function() {
+      if (pxhr.status === 200 && pxhr.responseText && pxhr.responseText.indexOf('http') === 0) {
+        callback(pxhr.responseText.trim());
+      } else {
+        fallback();
+      }
+    };
+    pxhr.onerror = fallback;
+    pxhr.ontimeout = fallback;
+    pxhr.send();
+  }
+
+  function fallback() {
+    // 缩短失败,显示原链接
+    callback(longUrl);
+  }
+}
+
+function showShareDialog(fullUrl) {
+  var preview = document.getElementById('formPreview');
+  // 先显示加载状态 + 完整链接
+  document.getElementById('shortLinkText').textContent = '⏳ 正在缩短链接...';
+  document.getElementById('shortLinkSpinner').style.display = '';
+  document.getElementById('shortLinkWrap').style.display = 'none';
+  document.getElementById('fullLinkText').textContent = fullUrl;
+  preview.classList.add('show');
+  if (currentPage !== 'pg4') {
+    navTo('pg4');
+    populateForm();
+  }
+  setTimeout(function() {
+    if (preview) preview.scrollIntoView({behavior:'smooth'});
+  }, 300);
+}
+
+function _doCopy(text, okId) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  ta.setSelectionRange(0, 99999);
+  var copied = false;
+  try { copied = document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (copied) {
+    _showCopyOk(okId);
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ _showCopyOk(okId); }).catch(function() {
+      toast('请长按链接手动复制');
+    });
+  } else {
+    toast('请长按链接手动复制');
+  }
+}
+
+function copyShortLink() {
+  _doCopy(document.getElementById('shortLinkText').textContent, 'copyOk');
+}
+function copyFullLink() {
+  _doCopy(document.getElementById('fullLinkText').textContent, 'fullCopyOk');
+}
+
+function _showCopyOk(id) {
+  var el = document.getElementById(id);
+  el.style.display = 'inline';
+  setTimeout(function() { el.style.display = 'none'; }, 2000);
+}
+
+// ========== NAVIGATION ==========
+var pageStack = ['pg1'];
+var currentPage = 'pg1';
+
+function navTo(targetId, data) {
+  document.getElementById(currentPage).classList.remove('active');
+  document.getElementById(targetId).classList.add('active');
+  pageStack.push(currentPage);
+  currentPage = targetId;
+
+  if (targetId === 'pg2') initPg2();
+  if (targetId === 'pg3') initPg3();
+  if (targetId === 'pg4') populateForm();
+
+  window.scrollTo(0, 0);
+}
+
+function backTo(targetId) {
+  document.getElementById(currentPage).classList.remove('active');
+  document.getElementById(targetId).classList.add('active');
+  pageStack.pop();
+  currentPage = targetId;
+
+  if (targetId === 'pg2') initPg2();
+  if (targetId === 'pg1') initPg1();
+
+  window.scrollTo(0, 0);
+}
+
+// ========== TOAST ==========
+var toastTimer = null;
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 1800);
+}
+
+// ========== PARSE DATE ==========
+function parseDate(dateStr) {
+  if (!dateStr) return { nian: '', yue: '', ri: '' };
+  var parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return { nian: parts[0], yue: parts[1], ri: parts[2] };
+  }
+  return { nian: '', yue: '', ri: '' };
+}
+
+function formatDate(dateStr) {
+  var d = parseDate(dateStr);
+  if (!d.nian) return '';
+  return d.nian + '年' + d.yue + '月' + d.ri + '日';
+}
+
+// ========== INIT PG1 ==========
+function initPg1() {
+  var hasData = !!(DATA.name && DATA.school);
+  if (hasData) {
+    var recTitle = document.querySelector('.rec-title');
+    if (recTitle && DATA.name) {
+      recTitle.textContent = DATA.name + ' · 学信档案';
+    }
+  }
+  // g.html 独立展示页: 始终隐藏编辑按钮栏
+  var editBar = document.getElementById('editBar');
+  if (editBar) editBar.style.display = 'none';
+}
+
+function handleImgUpload(inputEl, targetId) {
+  var file = inputEl.files[0];
+  if (!file) return;
+  if (!file.type.match(/image\//)) { alert('请选择图片文件'); return; }
+
+  var target = document.getElementById(targetId);
+  target.value = '处理中...';
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      // 压缩到缩略图大小(最大200px宽,高质量JPEG)
+      var maxW = 200, maxH = 240;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var base64 = canvas.toDataURL('image/jpeg', 0.75);
+
+      target.value = base64;
+      target.style.color = '#09b37d';
+      toast('照片已导入!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function isFromShareLink() {
+  var params = new URLSearchParams(window.location.search);
+  return !!(params.get('q') || params.get('d') || params.get('s'));
+}
+
+// ========== INIT PG2 ==========
+function initPg2() {
+  var d = DATA;
+  var hasUndergrad = !!(d.school && d.major);
+  var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
+
+  // Undergraduate cards
+  var degLabel = d.academic_qualification || '本科';
+  var eduTitle = (degLabel === '专科') ? '专科教育' : '本科教育';
+  var shortLabel = (degLabel === '专科') ? '专科' : '本科';
+  document.getElementById('ugBlockTitle').textContent = eduTitle;
+  var ugTab = document.getElementById('ugLevelTab');
+  if (ugTab) ugTab.textContent = shortLabel;
+
+  if (hasUndergrad) {
+    document.getElementById('xjSchool').textContent = d.school;
+    document.getElementById('xjDegree').textContent = d.academic_qualification;
+    document.getElementById('xjMajor').textContent = d.major;
+    document.getElementById('xjType').textContent = d.xltype;
+    document.getElementById('xlSchool').textContent = d.school;
+    document.getElementById('xlDegree').textContent = d.academic_qualification;
+    document.getElementById('xlMajor').textContent = d.major;
+    document.getElementById('xlType').textContent = d.xltype;
+  } else {
+    document.getElementById('xjSchool').textContent = '--';
+    document.getElementById('xjDegree').textContent = '--';
+    document.getElementById('xjMajor').textContent = '--';
+    document.getElementById('xjType').textContent = '--';
+    document.getElementById('xlSchool').textContent = '--';
+    document.getElementById('xlDegree').textContent = '--';
+    document.getElementById('xlMajor').textContent = '--';
+    document.getElementById('xlType').textContent = '--';
+  }
+  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
+  document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
+
+  // Graduate cards
+  var gradBlock = document.getElementById('gradBlock');
+  if (hasGrad) {
+    var gLevel = d.grad_level || '硕士';
+    document.getElementById('gradBlockTitle').textContent = gLevel + '研究生教育';
+    document.getElementById('gradBlockBadge').textContent = gLevel;
+    document.getElementById('gradBlockBadge').className = 'edu-block-badge ' + (gLevel === '博士' ? 'doctor' : 'master');
+    document.getElementById('gradBlockBadge').style.display = '';
+
+    // Update card styles
+    var isDoctor = gLevel === '博士';
+    var cards = gradBlock.querySelectorAll('.info-card');
+    cards.forEach(function(card) {
+      card.className = 'info-card ' + (isDoctor ? 'doctor-card' : 'master-card');
+    });
+
+    document.getElementById('gxjSchool').textContent = d.grad_school;
+    document.getElementById('gxjDegree').textContent = gLevel + '研究生';
+    document.getElementById('gxjMajor').textContent = d.grad_major;
+    document.getElementById('gxjType').textContent = d.grad_train_mode || '--';
+    document.getElementById('gxlSchool').textContent = d.grad_school;
+    document.getElementById('gxlDegree').textContent = gLevel + '研究生';
+    document.getElementById('gxlMajor').textContent = d.grad_major;
+    document.getElementById('gxlType').textContent = d.grad_train_mode || '--';
+
+    // Show cards, hide empty states
+    document.getElementById('gradXjCard').style.display = '';
+    document.getElementById('gradXlCard').style.display = '';
+    document.getElementById('gradXjEmpty').style.display = 'none';
+    document.getElementById('gradXlEmpty').style.display = 'none';
+
+    // Update grad tab in pg3
+    var gradTab = document.getElementById('gradTab');
+    gradTab.style.display = '';
+    gradTab.textContent = gLevel;
+  } else {
+    // 未填写研究生信息:完全隐藏研究生区块
+    gradBlock.style.display = 'none';
+    // 同时隐藏pg3的研究生tab
+    var gradTab2 = document.getElementById('gradTab');
+    if (gradTab2) gradTab2.style.display = 'none';
+  }
+
+  // 照片显示(仅在pg3存在,pg2无此元素)
+  // pg2不包含admPhotoBox/degPhotoBox,此代码仅用于将来的pg2扩展
+}
+
+// ========== INIT PG3 ==========
+var detailLevel = 0; // 0=undergrad, 1=grad
+
+function navToDetail(level) {
+  detailLevel = level;
+  navTo('pg3');
+}
+
+function initPg3() {
+  var d = DATA;
+  var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
+
+  // Level tabs
+  var tabs = document.querySelectorAll('#levelTabs .level-tab');
+  var gradTab = document.getElementById('gradTab');
+  gradTab.style.display = hasGrad ? '' : 'none';
+
+  // Set active tab
+  tabs.forEach(function(t) {
+    t.classList.remove('active');
+    if (parseInt(t.getAttribute('data-idx')) === detailLevel) {
+      t.classList.add('active');
+    }
+  });
+
+  // Status bar height
+  var statusH = 20;
+  try {
+    var sat = parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)'));
+    if (sat > 0) statusH = sat;
+  } catch(e) {}
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) statusH = Math.max(statusH, 20);
+
+  document.getElementById('nbSp3').style.height = statusH + 'px';
+  document.getElementById('nbPh3').style.height = (statusH + 45) + 'px';
+
+  var isGrad = (detailLevel === 1 && hasGrad);
+  var gLevel = d.grad_level || '硕士';
+
+  // Card style
+  var card = document.getElementById('detailCard');
+  card.className = 'main-card';
+  if (isGrad) {
+    card.classList.add(gLevel === '博士' ? 'doctor' : 'master');
+  }
+
+  // Determine which data to show
+  var school, major, degreeLabel, xltype, eduSys, xllb, fenyuan, xisuo, banji, xuehao;
+  var zhuangtai, ruDate, liDate, imgA, imgB;
+  var research = '', supervisor = '', enrollType = '', trainMode = '';
+
+  if (isGrad) {
+    school = d.grad_school;
+    major = d.grad_major;
+    degreeLabel = gLevel + '研究生';
+    xltype = d.grad_train_mode || '';
+    eduSys = d.grad_educational_system || '3';
+    xllb = '研究生教育';
+    fenyuan = d.grad_fenyuan || '';
+    xisuo = '';
+    banji = '';
+    xuehao = d.grad_xuehao || '';
+    zhuangtai = d.grad_zhuangtai || '';
+    ruDate = { nian: d.grad_ru_nian, yue: d.grad_ru_yue, ri: d.grad_ru_ri };
+    liDate = { nian: d.grad_li_nian, yue: d.grad_li_yue, ri: d.grad_li_ri };
+    imgA = d.grad_image_a || '';
+    imgB = d.grad_image_b || '';
+    research = d.grad_research || '';
+    supervisor = d.grad_supervisor || '';
+    enrollType = d.grad_enroll_type || '';
+    trainMode = d.grad_train_mode || '';
+  } else {
+    school = d.school;
+    major = d.major;
+    degreeLabel = d.academic_qualification;
+    xltype = d.xltype;
+    eduSys = d.educational_system || '4';
+    xllb = d.xllb || '';
+    fenyuan = d.fenyuan || '';
+    xisuo = d.xisuo || '';
+    banji = d.banji || '';
+    xuehao = d.xuehao || '';
+    zhuangtai = d.zhuangtai || '';
+    ruDate = { nian: d.ru_nian, yue: d.ru_yue, ri: d.ru_ri };
+    liDate = { nian: d.li_nian, yue: d.li_yue, ri: d.li_ri };
+    imgA = d.image_a || '';
+    imgB = d.image_b || '';
+  }
+
+  // Populate fields
+  document.getElementById('pName').textContent = d.name || '--';
+  document.getElementById('pGender').textContent = d.gender || '--';
+  var birthStr = d.nian ? (d.nian + '年' + d.yue + '月' + d.ri + '日') : '--';
+  document.getElementById('pBirth').textContent = birthStr;
+  document.getElementById('sName').textContent = school || '--';
+  document.getElementById('sDegree').textContent = degreeLabel || '--';
+  document.getElementById('mName').textContent = major || '--';
+  document.getElementById('mType').textContent = xltype || '--';
+
+  // Graduate extra tags
+  var extraRow = document.getElementById('gradExtraRow');
+  if (isGrad) {
+    extraRow.style.display = 'flex';
+    document.getElementById('gTag1').textContent = d.grad_degree_type || '';
+    document.getElementById('gTag2').textContent = trainMode || '';
+    document.getElementById('gTag3').textContent = enrollType || '';
+    // Hide any empty tags
+    ['gTag1','gTag2','gTag3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      el.style.display = el.textContent ? '' : 'none';
+    });
+  } else {
+    extraRow.style.display = 'none';
+  }
+
+  // Info list
+  document.getElementById('iName').textContent = d.name || '--';
+  document.getElementById('iGender').textContent = d.gender || '--';
+  document.getElementById('iNation').textContent = d.nation || '--';
+  document.getElementById('iId').textContent = d.id_number || '--';
+  document.getElementById('iBirth').textContent = birthStr;
+  document.getElementById('iCengci').textContent = degreeLabel || '--';
+  document.getElementById('iXllb').textContent = xllb || '--';
+  document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年') : '--';
+  document.getElementById('iResearch').textContent = research || '--';
+  document.getElementById('iSupervisor').textContent = supervisor || '--';
+  document.getElementById('iEnrollType').textContent = enrollType || '--';
+  document.getElementById('iTrainMode').textContent = trainMode || '--';
+  document.getElementById('iFenyuan').textContent = fenyuan || '--';
+  document.getElementById('iXisuo').textContent = xisuo || '--';
+  document.getElementById('iBanji').textContent = banji || '--';
+  document.getElementById('iXuehao').textContent = xuehao || '--';
+
+  var ruStr = ruDate.nian ? (ruDate.nian + '年' + ruDate.yue + '月' + ruDate.ri + '日') : '--';
+  var liStr = liDate.nian ? (liDate.nian + '年' + liDate.yue + '月' + liDate.ri + '日') : '--';
+  document.getElementById('iRuDate').textContent = ruStr;
+  document.getElementById('iZhuangtai').textContent = zhuangtai || '--';
+  document.getElementById('iLiDate').textContent = liStr;
+
+  // Show/hide graduate-only rows
+  var showGrad = isGrad;
+  document.getElementById('rowResearch').style.display = showGrad ? '' : 'none';
+  document.getElementById('rowSupervisor').style.display = showGrad ? '' : 'none';
+  document.getElementById('rowEnrollType').style.display = showGrad ? '' : 'none';
+  document.getElementById('rowTrainMode').style.display = showGrad ? '' : 'none';
+
+  // Photos
+  if (imgA) {
+    document.getElementById('admImg').src = imgA;
+    document.getElementById('admImg').style.display = 'block';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = 'none';
+  } else {
+    document.getElementById('admImg').style.display = 'none';
+    document.getElementById('admPhotoBox').querySelector('.photo-ph2').style.display = '';
+  }
+  if (imgB) {
+    document.getElementById('degImg').src = imgB;
+    document.getElementById('degImg').style.display = 'block';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = 'none';
+  } else {
+    document.getElementById('degImg').style.display = 'none';
+    document.getElementById('degPhotoBox').querySelector('.photo-ph2').style.display = '';
+  }
+}
+
+// ========== PG3 TAB SWITCHING ==========
+document.getElementById('levelTabs').addEventListener('click', function(e) {
+  var tab = e.target.closest('.level-tab');
+  if (!tab) return;
+  var idx = parseInt(tab.getAttribute('data-idx'));
+  if (idx === detailLevel) return;
+  detailLevel = idx;
+  initPg3();
+});
+
+// ========== FORM HANDLING (PG4) ==========
+function populateForm() {
+  var d = DATA;
+  setVal('fName', d.name);
+  setVal('fGender', d.gender);
+  setVal('fNation', d.nation);
+  setVal('fId', d.id_number || '');
+  if (d.nian) {
+    var bd = d.nian + '-' + padNum(d.yue) + '-' + padNum(d.ri);
+    setVal('fBirth', bd);
+  } else {
+    setVal('fBirth', '');
+  }
+
+  setVal('fSchool', d.school);
+  setVal('fDegree', d.academic_qualification);
+  setVal('fEduSys', d.educational_system);
+  setVal('fMajor', d.major);
+  setVal('fXlType', d.xltype);
+  setVal('fXllb', d.xllb);
+  setVal('fFenyuan', d.fenyuan);
+  setVal('fXisuo', d.xisuo);
+  setVal('fBanji', d.banji);
+  setVal('fXuehao', d.xuehao);
+  if (d.ru_nian) setVal('fRuDate', d.ru_nian + '-' + padNum(d.ru_yue) + '-' + padNum(d.ru_ri));
+  else setVal('fRuDate', '');
+  if (d.li_nian) setVal('fLiDate', d.li_nian + '-' + padNum(d.li_yue) + '-' + padNum(d.li_ri));
+  else setVal('fLiDate', '');
+  setVal('fStatus', d.zhuangtai);
+  setVal('fImgA', d.image_a);
+  setVal('fImgB', d.image_b);
+
+  // Graduate fields
+  if (d.has_grad) {
+    document.getElementById('toggleGrad').classList.add('open');
+  }
+  setVal('fGSchool', d.grad_school);
+  setVal('fGMajor', d.grad_major);
+  setVal('fGDegreeType', d.grad_degree_type);
+  setVal('fGEduSys', d.grad_educational_system);
+  setVal('fGEnrollType', d.grad_enroll_type);
+  setVal('fGTrainMode', d.grad_train_mode);
+  setVal('fGResearch', d.grad_research);
+  setVal('fGSupervisor', d.grad_supervisor);
+  setVal('fGFenyuan', d.grad_fenyuan);
+  setVal('fGXuehao', d.grad_xuehao);
+  if (d.grad_ru_nian) setVal('fGRuDate', d.grad_ru_nian + '-' + padNum(d.grad_ru_yue) + '-' + padNum(d.grad_ru_ri));
+  else setVal('fGRuDate', '');
+  if (d.grad_li_nian) setVal('fGLiDate', d.grad_li_nian + '-' + padNum(d.grad_li_yue) + '-' + padNum(d.grad_li_ri));
+  else setVal('fGLiDate', '');
+  setVal('fGStatus', d.grad_zhuangtai);
+  setVal('fGImgA', d.grad_image_a);
+  setVal('fGImgB', d.grad_image_b);
+
+  // Set grad type tab
+  if (d.grad_level) {
+    switchGradTypeUI(d.grad_level);
+  }
+}
+
+function padNum(s) {
+  s = String(s || '');
+  return s.length === 1 ? '0' + s : s;
+}
+
+function setVal(id, val) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (el.tagName === 'SELECT') {
+    // Try to match option
+    var found = false;
+    for (var i = 0; i < el.options.length; i++) {
+      if (el.options[i].value === val) {
+        el.selectedIndex = i;
+        found = true;
+        break;
+      }
+    }
+    if (!found && val) el.value = val;
+  } else {
+    el.value = val || '';
+  }
+}
+
+function getVal(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function toggleGradSection() {
+  document.getElementById('toggleGrad').classList.toggle('open');
+}
+
+var currentGradType = '硕士';
+function switchGradType(type, btn) {
+  currentGradType = type;
+  switchGradTypeUI(type);
+}
+
+function switchGradTypeUI(type) {
+  currentGradType = type;
+  var tabs = document.querySelectorAll('#toggleGrad .grad-type-tab');
+  tabs.forEach(function(t) {
+    if (t.getAttribute('data-gtype') === type) {
+      t.classList.add('active');
+    } else {
+      t.classList.remove('active');
+    }
+  });
+  // Update toggle title
+  var toggleTitle = document.getElementById('gradToggleTitle');
+  if (toggleTitle) toggleTitle.textContent = '📚 ' + type + '研究生信息 (可选)';
+}
+
+function collectFormData() {
+  var d = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+  // Basic info
+  d.name = getVal('fName');
+  d.gender = getVal('fGender');
+  d.nation = getVal('fNation') || '汉族';
+  d.id_number = getVal('fId');
+
+  var birth = parseDate(getVal('fBirth'));
+  d.nian = birth.nian;
+  d.yue = birth.yue;
+  d.ri = birth.ri;
+
+  // Undergraduate
+  d.school = getVal('fSchool');
+  d.academic_qualification = getVal('fDegree');
+  d.educational_system = getVal('fEduSys');
+  d.major = getVal('fMajor');
+  d.xltype = getVal('fXlType');
+  d.xllb = getVal('fXllb');
+  d.fenyuan = getVal('fFenyuan');
+  d.xisuo = getVal('fXisuo');
+  d.banji = getVal('fBanji');
+  d.xuehao = getVal('fXuehao');
+
+  var ru = parseDate(getVal('fRuDate'));
+  d.ru_nian = ru.nian;
+  d.ru_yue = ru.yue;
+  d.ru_ri = ru.ri;
+
+  var li = parseDate(getVal('fLiDate'));
+  d.li_nian = li.nian;
+  d.li_yue = li.yue;
+  d.li_ri = li.ri;
+
+  d.zhuangtai = getVal('fStatus');
+  d.image_a = getVal('fImgA');
+  d.image_b = getVal('fImgB');
+
+  // Graduate - 仅在填写了学校+专业后才视为有效研究生数据
+  var hasGradToggled = document.getElementById('toggleGrad').classList.contains('open');
+  var gradSchool = getVal('fGSchool');
+  var gradMajor = getVal('fGMajor');
+  var hasGrad = hasGradToggled && !!(gradSchool && gradMajor);
+  d.has_grad = hasGrad;
+  if (hasGrad) {
+    d.grad_level = currentGradType;
+    d.grad_school = getVal('fGSchool');
+    d.grad_major = getVal('fGMajor');
+    d.grad_degree_type = getVal('fGDegreeType');
+    d.grad_educational_system = getVal('fGEduSys');
+    d.grad_enroll_type = getVal('fGEnrollType');
+    d.grad_train_mode = getVal('fGTrainMode');
+    d.grad_research = getVal('fGResearch');
+    d.grad_supervisor = getVal('fGSupervisor');
+    d.grad_fenyuan = getVal('fGFenyuan');
+    d.grad_xuehao = getVal('fGXuehao');
+
+    var gRu = parseDate(getVal('fGRuDate'));
+    d.grad_ru_nian = gRu.nian;
+    d.grad_ru_yue = gRu.yue;
+    d.grad_ru_ri = gRu.ri;
+
+    var gLi = parseDate(getVal('fGLiDate'));
+    d.grad_li_nian = gLi.nian;
+    d.grad_li_yue = gLi.yue;
+    d.grad_li_ri = gLi.ri;
+
+    d.grad_zhuangtai = getVal('fGStatus');
+    d.grad_image_a = getVal('fGImgA');
+    d.grad_image_b = getVal('fGImgB');
+  }
+
+  return d;
+}
+
+function submitForm() {
+  DATA = collectFormData();
+  showShareDialog('⏳ 正在保存...');
+
+  saveShortLink(function(err, id) {
+    if (err) {
+      var offlineUrl = getOfflineUrl();
+      updateShareDialog(offlineUrl);
+      try { window.history.replaceState({}, '', offlineUrl); } catch(e) {}
+      toast('信息已保存(本地模式)');
+      return;
+    }
+    var shortUrl = WORKER_URL + '/s/' + id;
+    var fullUrl = window.location.origin + window.location.pathname + '?q=' + id;
+    updateShareDialog(shortUrl, fullUrl);
+    try { window.history.replaceState({}, '', fullUrl); } catch(e) {}
+    toast('短链接已生成!');
+  });
+}
+
+function submitAndPreview() {
+  DATA = collectFormData();
+
+  var offlineUrl = getOfflineUrl();
+  try {
+    window.history.replaceState({}, '', offlineUrl);
+  } catch(e) {}
+
+  backTo('pg1');
+  setTimeout(function() { navTo('pg2'); }, 100);
+  toast('请查看高等教育信息页预览效果');
+}
+
+// ========== PG1 TABBAR ==========
+document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(item, idx) {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('#tabbar1 .tabbar-item').forEach(function(i) { i.classList.remove('active'); });
+    this.classList.add('active');
+    var labels = ['首页', '学籍学历学位', '个人测评', '求职招聘', '我的'];
+    if (idx > 0) toast('切换到:' + labels[idx]);
+  });
+});
+
+function loadFromShortCode(id) {
+  // 先尝试本地 localStorage
+  var local = LOCAL_STORE[id];
+  if (local && local.name) return Promise.resolve(local);
+
+  // 本地没有,从 Cloudflare Workers KV 读取
+  return fetch(WORKER_URL + '/api/get/' + id)
+    .then(function(r) {
+      if (!r.ok) throw new Error('Not found');
+      return r.text(); // 可能是压缩字符串或JSON
+    })
+    .then(function(raw) {
+      var data;
+      // 先尝试JSON解析
+      try { data = JSON.parse(raw); } catch(e) {
+        // 失败则尝试LZString解压(压缩格式)
+        if (typeof LZString !== 'undefined' && LZString.decompressFromEncodedURIComponent) {
+          try {
+            var decompressed = LZString.decompressFromEncodedURIComponent(raw);
+            if (decompressed) data = JSON.parse(decompressed);
+          } catch(e2) {}
+        }
+      }
+      if (data && data.name) {
+        LOCAL_STORE[id] = data;
+        saveLocalStore();
+        return data;
+      }
+      return null;
+    })
+    .catch(function() { return null; });
+}
+
+// ========== INIT ==========
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  // 优先新格式 ?q=ID.DATA(跨设备) / ?q=ID(极短离线), 兼容旧格式 ?s=
+  var shortId = null;
+  var qParam = params.get('q');
+  if (qParam && qParam.indexOf('.') > 0) {
+    // ?q=ID.DATA — 含跨设备数据的完整链接
+    shortId = qParam.substring(0, qParam.indexOf('.'));
+  } else if (qParam && qParam.length >= 8 && !qParam.match(/[{}[\]]/)) {
+    // ?q=ID — 极短离线链接(仅ID,无JSON特征)
+    shortId = qParam;
+  }
+  if (!shortId) shortId = params.get('s');
+
+  function runInit() {
+    // g.html 独立展示页: 始终隐藏编辑按钮栏
+    var editBar = document.getElementById('editBar');
+    if (editBar) editBar.style.display = 'none';
+
+    var hasData = !!(DATA.name && DATA.school);
+    if (hasData) {
+      initPg1();
+      // g.html独立展示页:不显示reportBtn
+      // var reportBtn = document.getElementById('reportBtn');
+      // if (reportBtn) reportBtn.style.display = '';
+    }
+
+    // 如果当前在pg2,数据加载完成后刷新显示
+    if (currentPage === 'pg2') {
+      initPg2();
+    }
+
+    var id = params.get('id');
+    if (!id) {
+      var hash = window.location.hash;
+      var m = hash.match(/[?&]id=([^&]+)/);
+      if (m) id = m[1];
+    }
+    if (id && id.length > 8) {
+      console.log('[app] ID (legacy):', id);
+    }
+
+    console.log('[app] 学信档案已就绪');
+    if (hasData) {
+      console.log('[app] 已加载数据: ' + DATA.name + ' - ' + DATA.school);
+    } else {
+      console.log('[app] 未检测到数据,请点击"填写/编辑信息"或通过分享链接打开');
+    }
+  }
+
+  if (shortId) {
+    // 短链接: 先尝试 localStorage, 失败则用 ?d= 回退
+    console.log('[app] 检测到短链接,正在加载...');
+    loadFromShortCode(shortId).then(function(loaded) {
+      if (loaded && loaded.name) {
+        DATA = loaded;
+        console.log('[app] 短链接数据加载成功(本设备)');
+      } else {
+        // localStorage 无数据, 尝试 URL 中的 ?d= 回退
+        var fallback = loadDataFromURL();
+        if (fallback) {
+          DATA = fallback;
+          // 顺便存回 localStorage
+          LOCAL_STORE[shortId] = fallback;
+          saveLocalStore();
+          console.log('[app] 从 ?d= 回退加载成功');
+        } else {
+          console.log('[app] 数据加载失败: localStorage和URL均无数据');
+          toast('链接已失效或不存在');
+        }
+      }
+      runInit();
+    });
+  } else {
+    // 没有 ?s=,尝试从 ?d= 或 hash 加载
+    var urlData = loadDataFromURL();
+    if (urlData) {
+      DATA = urlData;
+      console.log('[app] 从URL加载数据成功');
+    }
+    runInit();
+  }
+})();
+</script>
+</body>
+</html>
