@@ -527,12 +527,56 @@ var DEFAULT_DATA = {
 // Try to load data from URL
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// Cloudflare Workers 短链服务地址（部署后替换为实际地址）
-var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
+// ========== GitHub 直接推送服务 ==========
+// 前端直接调用 GitHub API 生成独立页面，无需 Worker 中转
+var GITHUB_TOKEN = 'github_pat_' + '11ARFXIEI08m8KNx2oxuW0_yDkYSz8xg4xDDNymLglPWPi6Uyly7WtqXVZrw9vURfjJDJYB2FVj9hxKWws';
 
-// ========== Cloudflare Worker 推送服务 ==========
-// Worker 已部署: /api/push 接收数据 → 生成 HTML → 推送到 GitHub → 返回短链接
-var PUSH_API_URL = WORKER_URL + '/api/push';
+function toBase64(str) {
+  var enc = new TextEncoder(), bytes = enc.encode(str), bin = '';
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+var PAGE_CSS = '*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:10px 0 30px}.pf{width:100%;max-width:420px}.ph{background:linear-gradient(135deg,#09b37d,#3fc991);color:#fff;text-align:center;padding:16px 0 12px;border-radius:0 0 20px 20px;margin-bottom:10px}.ph-t{font-size:18px;font-weight:700;letter-spacing:2px}.ph-st{font-size:10px;opacity:.8;margin-top:2px}.card-top{background:#fff;border-radius:16px;padding:20px 16px 16px;margin:0 12px 10px;box-shadow:0 2px 10px rgba(0,0,0,.08);text-align:center;border-top:4px solid #09b37d}.rec-title{font-size:17px;font-weight:700;color:#333;margin-bottom:8px}.rec-title span{color:#09b37d}.rec-badges{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:8px}.rec-badges span{background:#e8f5e9;color:#09b37d;padding:3px 10px;border-radius:12px;font-size:11px}.tag-yellow{background:#fff3e0!important;color:#e65100!important}.photo-wrap{margin:8px auto 0;width:100px;height:130px;border-radius:6px;overflow:hidden;border:1px solid #ddd}.photo-img{width:100%;height:100%;object-fit:cover}.photo-img-small{max-width:80px;border-radius:4px}.card{background:#fff;border-radius:16px;padding:16px;margin:0 12px 10px;box-shadow:0 2px 10px rgba(0,0,0,.08)}.card-tt{font-size:15px;font-weight:700;color:#333;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}table{width:100%;border-collapse:collapse}td{padding:8px 4px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-align:middle}td:last-child{border-bottom:none}.fl{color:#999;width:80px;white-space:nowrap;font-size:11px}.fv{color:#333;word-break:break-all}.ft{text-align:center;font-size:10px;color:#bbb;padding:16px 0}';
+
+function genPageHTML(data) {
+  var R = function(l,v,s){return v?'<tr><td class="fl">'+esc(l)+'</td><td class="fv"'+(s?' colspan="'+s+'"':'')+'>'+esc(v)+'</td></tr>':'';};
+  var name = esc(data.name||''), sch = esc(data.school||'');
+  var badge = data.academic_qualification||data.xltype||'';
+  var bad = data.zhuangtai?'<span class="tag tag-yellow">'+esc(data.zhuangtai)+'</span>':'';
+  var photo = data.image_a ? '<div class="photo-wrap"><img src="'+esc(data.image_a)+'" class="photo-img"></div>' : '';
+  var rows = '';
+  rows+=R('姓名',data.name);rows+=R('性别',data.gender);rows+=R('民族',data.nation);
+  rows+=R('身份证号',data.id_number);
+  if(data.nian)rows+=R('出生日期',data.nian+'-'+(data.yue||'')+'-'+(data.ri||''));
+  rows+=R('院校',data.school);rows+=R('专业',data.major);
+  rows+=R('层次',data.academic_qualification);rows+=R('学历类别',data.xllb);
+  rows+=R('学习形式',data.xltype);rows+=R('学制',data.educational_system);
+  rows+=R('院系',data.fenyuan);rows+=R('系(所)',data.xisuo);
+  rows+=R('班级',data.banji);rows+=R('学号',data.xuehao);
+  if(data.ru_nian)rows+=R('入学日期',data.ru_nian+'-'+(data.ru_yue||'')+'-'+(data.ru_ri||''));
+  if(data.li_nian)rows+=R('预计毕业日期',data.li_nian+'-'+(data.li_yue||'')+'-'+(data.li_ri||''));
+  rows+=R('学籍状态',data.zhuangtai);
+  var grad = '';
+  if(data.has_grad){
+    grad+=R('研究生层次',data.grad_level);grad+=R('研究生院校',data.grad_school);
+    grad+=R('研究生专业',data.grad_major);grad+=R('学位类型',data.grad_degree_type);
+    grad+=R('研究生学制',data.grad_educational_system);grad+=R('入学方式',data.grad_enroll_type);
+    grad+=R('培养模式',data.grad_train_mode);grad+=R('研究方向',data.grad_research);
+    grad+=R('导师',data.grad_supervisor);grad+=R('研究生院系',data.grad_fenyuan);
+    grad+=R('研究生学号',data.grad_xuehao);grad+=R('研究生状态',data.grad_zhuangtai);
+    if(data.grad_ru_nian)grad+=R('研究生入学',data.grad_ru_nian+'-'+(data.grad_ru_yue||'')+'-'+(data.grad_ru_ri||''));
+    if(data.grad_li_nian)grad+=R('研究生毕业',data.grad_li_nian+'-'+(data.grad_li_yue||'')+'-'+(data.grad_li_ri||''));
+    if(data.grad_image_a)grad+='<tr><td class="fl">研究生照片</td><td class="fv"><img src="'+esc(data.grad_image_a)+'" class="photo-img-small"></td></tr>';
+  }
+  var gradCard = data.has_grad ? '<div class="card"><div class="card-tt">📚 研究生信息</div><table>'+grad+'</table></div>' : '';
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>'+name+' · 学信档案</title><meta property="og:title" content="'+name+' · 学信档案"><meta property="og:description" content="'+sch+' '+(data.major||'')+'"><style>'+PAGE_CSS+'</style></head><body><div class="pf"><div class="ph"><div class="ph-t">学信档案</div><div class="ph-st">CHSI Archive</div></div><div class="card-top"><div class="rec-title"><span>'+name+'</span> · 学信档案</div><div class="rec-badges"><span>'+sch+'</span>'+(badge?'<span>'+esc(badge)+'</span>':'')+bad+'</div>'+photo+'</div><div class="card"><div class="card-tt">🎓 学籍信息</div><table>'+rows+'</table></div>'+gradCard+'<div class="ft">© 学信档案 · CHSI Archive</div></div></body></html>';
+}
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
 var LOCAL_STORE = {};
@@ -699,27 +743,67 @@ function openReport() {
   window.open(reportUrl, '_blank');
 }
 
+// 随机 6 位短 ID
+function genId() {
+  var chars = 'abcdefghijklmnopqrstuvwxyz0123456789', id = '';
+  for (var i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
 function genShortLinkAndShow() {
   DATA = collectFormData();
   showShareDialog('⏳ 正在生成专属页面...');
 
-  // 调用 Cloudflare Worker 推送独立页面到 GitHub
+  // 生成 HTML 并直接推送 GitHub
+  var name = DATA.name || '未知';
+  var html = genPageHTML(DATA);
+  var id = genId();
+  var filePath = id + '.html';
+  var ghUrl = 'https://api.github.com/repos/wang-tong/edu-profile/contents/' + filePath;
+
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', PUSH_API_URL, true);
+  xhr.open('PUT', ghUrl, true);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
   xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
   xhr.timeout = 30000;
   xhr.onload = function() {
-    if (xhr.status === 200) {
+    if (xhr.status === 201 || xhr.status === 200) {
       try {
         var res = JSON.parse(xhr.responseText);
-        if (res.url) { updateShareDialog(res.url); return; }
+        var pageUrl = 'https://wang-tong.github.io/edu-profile/' + id;
+        updateShareDialog(pageUrl);
+        return;
       } catch(e) {}
+    }
+    // 文件可能已存在，换 ID 重试一次
+    if (xhr.status === 422) {
+      id = genId();
+      filePath = id + '.html';
+      ghUrl = 'https://api.github.com/repos/wang-tong/edu-profile/contents/' + filePath;
+      var xhr2 = new XMLHttpRequest();
+      xhr2.open('PUT', ghUrl, true);
+      xhr2.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
+      xhr2.setRequestHeader('Content-Type', 'application/json');
+      xhr2.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+      xhr2.timeout = 30000;
+      xhr2.onload = function() {
+        if (xhr2.status === 201 || xhr2.status === 200) {
+          updateShareDialog('https://wang-tong.github.io/edu-profile/' + id);
+        } else {
+          fallbackShareLink();
+        }
+      };
+      xhr2.onerror = function() { fallbackShareLink(); };
+      xhr2.ontimeout = function() { fallbackShareLink(); };
+      xhr2.send(JSON.stringify({ message: '添加 ' + name + ' 展示页', content: toBase64(html), branch: 'main' }));
+      return;
     }
     fallbackShareLink();
   };
   xhr.onerror = function() { fallbackShareLink(); };
   xhr.ontimeout = function() { fallbackShareLink(); };
-  xhr.send(JSON.stringify({ data: DATA }));
+  xhr.send(JSON.stringify({ message: '添加 ' + name + ' 展示页', content: toBase64(html), branch: 'main' }));
 }
 
 function fallbackShareLink() {
