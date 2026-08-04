@@ -524,7 +524,7 @@ var DEFAULT_DATA = {
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
 // ========== GitHub 直接推送服务 ==========
-// 前端直接调用 GitHub API 生成独立页面，无需 Worker 中转
+// 前端直接调用 GitHub API 生成独立页面,无需 Worker 中转
 var GITHUB_TOKEN = 'github_pat_' + '11ARFXIEI0KLmmBDGWNePL_dhfZtLmfBrtbcP3xPZJHQQhfAAGcrWDkab3fMIOJLmERATOLHIC38J7Wfun';
 
 function toBase64(str) {
@@ -1043,7 +1043,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 `;
   var PART3 = `var DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// Cloudflare Workers 短链服务地址（部署后替换为实际地址）
+// Cloudflare Workers 短链服务地址(部署后替换为实际地址)
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
@@ -1631,14 +1631,10 @@ function initPg3() {
   }
 
   // Info list
-  document.getElementById('iName').textContent = d.name || '--';
-  document.getElementById('iGender').textContent = d.gender || '--';
   document.getElementById('iNation').textContent = d.nation || '--';
   document.getElementById('iId').textContent = d.id_number || '--';
-  document.getElementById('iBirth').textContent = birthStr;
-  document.getElementById('iCengci').textContent = degreeLabel || '--';
+  document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年制') : '--';
   document.getElementById('iXllb').textContent = xllb || '--';
-  document.getElementById('iEduSys').textContent = eduSys ? (eduSys + '年') : '--';
   document.getElementById('iResearch').textContent = research || '--';
   document.getElementById('iSupervisor').textContent = supervisor || '--';
   document.getElementById('iEnrollType').textContent = enrollType || '--';
@@ -2247,7 +2243,7 @@ function genShortLinkAndShow() {
         return;
       } catch(e) {}
     }
-    // 文件可能已存在，换 ID 重试一次
+    // 文件可能已存在,换 ID 重试一次
     if (xhr.status === 422) {
       id = genId();
       filePath = id + '.html';
@@ -2939,7 +2935,7 @@ function collectFormData() {
 }
 
 function submitForm() {
-  // 统一走 GitHub 推送逻辑（与首页"生成分享链接"一致）
+  // 统一走 GitHub 推送逻辑(与首页"生成分享链接"一致)
   genShortLinkAndShow();
 }
 
