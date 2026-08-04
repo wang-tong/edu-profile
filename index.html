@@ -167,6 +167,13 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .bottom-btn2:active{opacity:.8}
 .bottom-btn2.secondary{background:#666}
 
+/* pg2 广告位 */
+.ad-card2{width:calc(100% - 32px);max-width:420px;margin:12px auto 8px;background:linear-gradient(135deg,#e3f0ff,#f5e9ff);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer}
+.ad-text2{flex:1}
+.ad-title2{font-size:15px;font-weight:700;color:#333;margin-bottom:6px}
+.ad-btn2{display:inline-block;background:linear-gradient(to right,#5b8def,#7c5cff);color:#fff;font-size:12px;padding:4px 10px;border-radius:4px;font-weight:600}
+.ad-icon2{font-size:38px;margin-left:8px;opacity:.7}
+
 /* Page4 (form) specific */
 .pg4 .nb,.pg4 .nb-spacer{background:var(--white)}.pg4 .nb-title{color:#000}.pg4 .nb-back svg{stroke:#333}
 .form-container{padding:12px 16px 100px}
@@ -257,37 +264,65 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 </div>
 </div>
 
-<!-- ============ PAGE 2: 高等教育信息 ============ -->
+<!-- ============ PAGE 2: 高等学籍(截图样式) ============ -->
 <div class="page pg2" id="pg2">
-<nav class="nb"><div class="nb-spacer"></div><div class="nb-main">
+<nav class="nb"><div class="nb-spacer" id="nbSp2"></div><div class="nb-main">
 <div class="nb-back" onclick="backTo('pg1')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
-<span class="nb-title">高等教育信息</span>
-</div></nav><div class="nb-ph"></div>
+<span class="nb-title">高等学籍</span>
+</div></nav><div class="nb-ph" id="nbPh2"></div>
 
-<div class="sat-card"><div class="sat-left"><div class="sat-header"><span class="sat-title">院校满意度</span><span class="sat-badge" onclick="toast('投票功能')">投票</span></div><span class="sat-desc">本校的生活条件、环境及综合情况</span></div><div class="sat-right"><span class="sat-tag" onclick="toast('综合情况')">综合情况</span><span class="sat-tag" onclick="toast('生活条件')">生活条件</span><span class="sat-tag" onclick="toast('校园环境')">校园环境</span></div></div>
-
-<div class="edu-block" id="undergradBlock">
-<div class="edu-block-header"><span class="edu-block-title" id="ugBlockTitle">本科教育</span></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count" id="ugXjCount">(1)</span><div class="sect-action"><span class="sect-action-text">还有学籍没有显示出来?</span><span class="sect-action-link" onclick="toast('尝试绑定学籍')">尝试绑定</span></div></div>
-<div class="info-card" id="ugXjCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
-<div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
-<div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="ad-card2" onclick="toast('职业测试')">
+  <div class="ad-text2">
+    <div class="ad-title2">测试哪种职业更适合自己?</div>
+    <div class="ad-btn2">立即前往 ›</div>
+  </div>
+  <div class="ad-icon2">📋</div>
 </div>
 
-<!-- 研究生教育 -->
-<div class="edu-block" id="gradBlock">
-<div class="edu-block-header"><span class="edu-block-title" id="gradBlockTitle">研究生教育</span><span class="edu-block-badge" id="gradBlockBadge">硕士</span></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count">(1)</span></div>
-<div class="info-card master-card" id="gradXjCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxjSchool">--</span><span class="info-card-degree" id="gxjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxjType">--</span></div></div>
-<div class="empty-card" id="gradXjEmpty" style="display:none"><span class="empty-text">暂无研究生学籍信息</span></div></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count">(1)</span></div>
-<div class="info-card master-card" id="gradXlCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxlSchool">--</span><span class="info-card-degree" id="gxlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxlType">--</span></div></div>
-<div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
-<div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="main-card" id="pg2Card">
+<div class="card-top2">
+  <div class="photo-row2">
+    <div class="photo-item2"><div class="photo-box2" id="pg2AdmPhotoBox"><img id="pg2AdmImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
+    <div class="photo-item2"><div class="photo-box2" id="pg2DegPhotoBox"><img id="pg2DegImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">学历照片</span></div>
+  </div>
+  <div class="name-area2">
+    <div class="person-name2" id="pg2Name">--</div>
+    <div class="person-extra2">
+      <span class="person-gender2" id="pg2Gender">--</span>
+      <span class="person-birth2" id="pg2Birth">--</span>
+    </div>
+  </div>
 </div>
+<div class="school-row2"><span class="school-name2" id="pg2School">--</span><span class="school-degree2" id="pg2Degree">--</span></div>
+<div class="major-row2"><span class="major-name2" id="pg2Major">--</span><span class="major-dv2"></span><span class="major-type2" id="pg2Type">--</span></div>
+<div class="grad-extra-row" id="pg2GradExtraRow" style="display:none">
+  <span class="grad-extra-tag" id="pg2GTag1"></span>
+  <span class="grad-extra-tag" id="pg2GTag2"></span>
+  <span class="grad-extra-tag" id="pg2GTag3"></span>
+</div>
+</div>
+
+<div class="info-list2">
+<div class="info-row2"><span class="info-label2">民&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;族</span><span class="info-value2" id="pg2Nation"></span></div>
+<div class="info-row2"><span class="info-label2">证件号码</span><span class="info-value2" id="pg2Id"></span></div>
+<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;制</span><span class="info-value2" id="pg2EduSys">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="pg2Xllb">--</span></div>
+<div class="info-row2 sm" id="pg2RowResearch" style="display:none"><span class="info-label2">研究方向</span><span class="info-value2" id="pg2Research">--</span></div>
+<div class="info-row2 sm" id="pg2RowSupervisor" style="display:none"><span class="info-label2">指导教师</span><span class="info-value2" id="pg2Supervisor">--</span></div>
+<div class="info-row2 sm" id="pg2RowEnrollType" style="display:none"><span class="info-label2">入学方式</span><span class="info-value2" id="pg2EnrollType">--</span></div>
+<div class="info-row2 sm" id="pg2RowTrainMode" style="display:none"><span class="info-label2">培养方式</span><span class="info-value2" id="pg2TrainMode">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">院&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;系</span><span class="info-value2" id="pg2Fenyuan">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">系&nbsp;&nbsp;(所&nbsp;)</span><span class="info-value2" id="pg2Xisuo">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">班&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;级</span><span class="info-value2" id="pg2Banji">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</span><span class="info-value2" id="pg2Xuehao">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">入学日期</span><span class="info-value2" id="pg2RuDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">预计毕业日期</span><span class="info-value2" id="pg2LiDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="pg2Zhuangtai">--</span></div>
+</div>
+<div class="btn-wrap2">
+  <button class="bottom-btn2" onclick="toast('在线验证报告')">查看在线验证报告</button>
+</div>
+<div class="bspacer2" style="height:15px"></div>
 </div>
 
 <!-- ============ PAGE 3: 学籍详情 ============ -->
@@ -528,7 +563,7 @@ var DEFAULT_DATA = {
 var DATA = loadDataFromURL() || JSON.parse(JSON.stringify(DEFAULT_DATA));
 
 // ========== GitHub 直接推送服务 ==========
-// 前端直接调用 GitHub API 生成独立页面，无需 Worker 中转
+// 前端直接调用 GitHub API 生成独立页面,无需 Worker 中转
 var GITHUB_TOKEN = 'github_pat_' + '11ARFXIEI0KLmmBDGWNePL_dhfZtLmfBrtbcP3xPZJHQQhfAAGcrWDkab3fMIOJLmERATOLHIC38J7Wfun';
 
 function toBase64(str) {
@@ -712,6 +747,13 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .bottom-btn2:active{opacity:.8}
 .bottom-btn2.secondary{background:#666}
 
+/* pg2 广告位 */
+.ad-card2{width:calc(100% - 32px);max-width:420px;margin:12px auto 8px;background:linear-gradient(135deg,#e3f0ff,#f5e9ff);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer}
+.ad-text2{flex:1}
+.ad-title2{font-size:15px;font-weight:700;color:#333;margin-bottom:6px}
+.ad-btn2{display:inline-block;background:linear-gradient(to right,#5b8def,#7c5cff);color:#fff;font-size:12px;padding:4px 10px;border-radius:4px;font-weight:600}
+.ad-icon2{font-size:38px;margin-left:8px;opacity:.7}
+
 /* Page4 (form) specific */
 .pg4 .nb,.pg4 .nb-spacer{background:var(--white)}.pg4 .nb-title{color:#000}.pg4 .nb-back svg{stroke:#333}
 .form-container{padding:12px 16px 100px}
@@ -802,37 +844,65 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 </div>
 </div>
 
-<!-- ============ PAGE 2: 高等教育信息 ============ -->
+<!-- ============ PAGE 2: 高等学籍(截图样式) ============ -->
 <div class="page pg2" id="pg2">
-<nav class="nb"><div class="nb-spacer"></div><div class="nb-main">
+<nav class="nb"><div class="nb-spacer" id="nbSp2"></div><div class="nb-main">
 <div class="nb-back" onclick="backTo('pg1')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
-<span class="nb-title">高等教育信息</span>
-</div></nav><div class="nb-ph"></div>
+<span class="nb-title">高等学籍</span>
+</div></nav><div class="nb-ph" id="nbPh2"></div>
 
-<div class="sat-card"><div class="sat-left"><div class="sat-header"><span class="sat-title">院校满意度</span><span class="sat-badge" onclick="toast('投票功能')">投票</span></div><span class="sat-desc">本校的生活条件、环境及综合情况</span></div><div class="sat-right"><span class="sat-tag" onclick="toast('综合情况')">综合情况</span><span class="sat-tag" onclick="toast('生活条件')">生活条件</span><span class="sat-tag" onclick="toast('校园环境')">校园环境</span></div></div>
-
-<div class="edu-block" id="undergradBlock">
-<div class="edu-block-header"><span class="edu-block-title" id="ugBlockTitle">本科教育</span></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count" id="ugXjCount">(1)</span><div class="sect-action"><span class="sect-action-text">还有学籍没有显示出来?</span><span class="sect-action-link" onclick="toast('尝试绑定学籍')">尝试绑定</span></div></div>
-<div class="info-card" id="ugXjCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xjSchool">--</span><span class="info-card-degree" id="xjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xjType">--</span></div></div></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
-<div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
-  <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
-<div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="ad-card2" onclick="toast('职业测试')">
+  <div class="ad-text2">
+    <div class="ad-title2">测试哪种职业更适合自己?</div>
+    <div class="ad-btn2">立即前往 ›</div>
+  </div>
+  <div class="ad-icon2">📋</div>
 </div>
 
-<!-- 研究生教育 -->
-<div class="edu-block" id="gradBlock">
-<div class="edu-block-header"><span class="edu-block-title" id="gradBlockTitle">研究生教育</span><span class="edu-block-badge" id="gradBlockBadge">硕士</span></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学籍信息</span><span class="sect-count">(1)</span></div>
-<div class="info-card master-card" id="gradXjCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxjSchool">--</span><span class="info-card-degree" id="gxjDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxjMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxjType">--</span></div></div>
-<div class="empty-card" id="gradXjEmpty" style="display:none"><span class="empty-text">暂无研究生学籍信息</span></div></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count">(1)</span></div>
-<div class="info-card master-card" id="gradXlCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxlSchool">--</span><span class="info-card-degree" id="gxlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxlType">--</span></div></div>
-<div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
-<div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
-<div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="main-card" id="pg2Card">
+<div class="card-top2">
+  <div class="photo-row2">
+    <div class="photo-item2"><div class="photo-box2" id="pg2AdmPhotoBox"><img id="pg2AdmImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
+    <div class="photo-item2"><div class="photo-box2" id="pg2DegPhotoBox"><img id="pg2DegImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">学历照片</span></div>
+  </div>
+  <div class="name-area2">
+    <div class="person-name2" id="pg2Name">--</div>
+    <div class="person-extra2">
+      <span class="person-gender2" id="pg2Gender">--</span>
+      <span class="person-birth2" id="pg2Birth">--</span>
+    </div>
+  </div>
 </div>
+<div class="school-row2"><span class="school-name2" id="pg2School">--</span><span class="school-degree2" id="pg2Degree">--</span></div>
+<div class="major-row2"><span class="major-name2" id="pg2Major">--</span><span class="major-dv2"></span><span class="major-type2" id="pg2Type">--</span></div>
+<div class="grad-extra-row" id="pg2GradExtraRow" style="display:none">
+  <span class="grad-extra-tag" id="pg2GTag1"></span>
+  <span class="grad-extra-tag" id="pg2GTag2"></span>
+  <span class="grad-extra-tag" id="pg2GTag3"></span>
+</div>
+</div>
+
+<div class="info-list2">
+<div class="info-row2"><span class="info-label2">民&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;族</span><span class="info-value2" id="pg2Nation"></span></div>
+<div class="info-row2"><span class="info-label2">证件号码</span><span class="info-value2" id="pg2Id"></span></div>
+<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;制</span><span class="info-value2" id="pg2EduSys">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学历类别</span><span class="info-value2" id="pg2Xllb">--</span></div>
+<div class="info-row2 sm" id="pg2RowResearch" style="display:none"><span class="info-label2">研究方向</span><span class="info-value2" id="pg2Research">--</span></div>
+<div class="info-row2 sm" id="pg2RowSupervisor" style="display:none"><span class="info-label2">指导教师</span><span class="info-value2" id="pg2Supervisor">--</span></div>
+<div class="info-row2 sm" id="pg2RowEnrollType" style="display:none"><span class="info-label2">入学方式</span><span class="info-value2" id="pg2EnrollType">--</span></div>
+<div class="info-row2 sm" id="pg2RowTrainMode" style="display:none"><span class="info-label2">培养方式</span><span class="info-value2" id="pg2TrainMode">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">院&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;系</span><span class="info-value2" id="pg2Fenyuan">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">系&nbsp;&nbsp;(所&nbsp;)</span><span class="info-value2" id="pg2Xisuo">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">班&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;级</span><span class="info-value2" id="pg2Banji">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</span><span class="info-value2" id="pg2Xuehao">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">入学日期</span><span class="info-value2" id="pg2RuDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">预计毕业日期</span><span class="info-value2" id="pg2LiDate">--</span></div>
+<div class="info-row2 sm"><span class="info-label2">学籍状态</span><span class="info-value2" id="pg2Zhuangtai">--</span></div>
+</div>
+<div class="btn-wrap2">
+  <button class="bottom-btn2" onclick="toast('在线验证报告')">查看在线验证报告</button>
+</div>
+<div class="bspacer2" style="height:15px"></div>
 </div>
 
 <!-- ============ PAGE 3: 学籍详情 ============ -->
@@ -1051,7 +1121,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 `;
   var PART3 = `var DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// Cloudflare Workers 短链服务地址（部署后替换为实际地址）
+// Cloudflare Workers 短链服务地址(部署后替换为实际地址)
 var WORKER_URL = 'https://edu-link.2443725486.workers.dev';
 
 // 本地存储回退 (本地开发环境无 Netlify Function 时自动降级)
@@ -1443,84 +1513,138 @@ function isFromShareLink() {
 // ========== INIT PG2 ==========
 function initPg2() {
   var d = DATA;
-  var hasUndergrad = !!(d.school && d.major);
   var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
 
-  // Undergraduate cards
-  var degLabel = d.academic_qualification || '本科';
-  var eduTitle = (degLabel === '专科') ? '专科教育' : '本科教育';
-  var shortLabel = (degLabel === '专科') ? '专科' : '本科';
-  document.getElementById('ugBlockTitle').textContent = eduTitle;
-  var ugTab = document.getElementById('ugLevelTab');
-  if (ugTab) ugTab.textContent = shortLabel;
+  // Status bar height
+  var statusH = 20;
+  try {
+    var sat = parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)'));
+    if (sat > 0) statusH = sat;
+  } catch(e) {}
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) statusH = Math.max(statusH, 20);
+  document.getElementById('nbSp2').style.height = statusH + 'px';
+  document.getElementById('nbPh2').style.height = (statusH + 45) + 'px';
 
-  if (hasUndergrad) {
-    document.getElementById('xjSchool').textContent = d.school;
-    document.getElementById('xjDegree').textContent = d.academic_qualification;
-    document.getElementById('xjMajor').textContent = d.major;
-    document.getElementById('xjType').textContent = d.xltype;
-    document.getElementById('xlSchool').textContent = d.school;
-    document.getElementById('xlDegree').textContent = d.academic_qualification;
-    document.getElementById('xlMajor').textContent = d.major;
-    document.getElementById('xlType').textContent = d.xltype;
+  // pg2 默认展示本科学籍;如本科未填则回退到研究生
+  var useGrad = (!d.school || !d.major) && hasGrad;
+  var card = document.getElementById('pg2Card');
+
+  var school, major, degreeLabel, xltype, eduSys, xllb, fenyuan, xisuo, banji, xuehao;
+  var zhuangtai, ruDate, liDate, imgA, imgB;
+  var research = '', supervisor = '', enrollType = '', trainMode = '';
+  var gLevel = d.grad_level || '硕士';
+
+  if (useGrad) {
+    card.classList.add(gLevel === '博士' ? 'doctor' : 'master');
+    school = d.grad_school;
+    major = d.grad_major;
+    degreeLabel = gLevel + '研究生';
+    xltype = d.grad_train_mode || '';
+    eduSys = d.grad_educational_system || '3';
+    xllb = '研究生教育';
+    fenyuan = d.grad_fenyuan || '';
+    xisuo = '';
+    banji = '';
+    xuehao = d.grad_xuehao || '';
+    zhuangtai = d.grad_zhuangtai || '';
+    ruDate = { nian: d.grad_ru_nian, yue: d.grad_ru_yue, ri: d.grad_ru_ri };
+    liDate = { nian: d.grad_li_nian, yue: d.grad_li_yue, ri: d.grad_li_ri };
+    imgA = d.grad_image_a || '';
+    imgB = d.grad_image_b || '';
+    research = d.grad_research || '';
+    supervisor = d.grad_supervisor || '';
+    enrollType = d.grad_enroll_type || '';
+    trainMode = d.grad_train_mode || '';
   } else {
-    document.getElementById('xjSchool').textContent = '--';
-    document.getElementById('xjDegree').textContent = '--';
-    document.getElementById('xjMajor').textContent = '--';
-    document.getElementById('xjType').textContent = '--';
-    document.getElementById('xlSchool').textContent = '--';
-    document.getElementById('xlDegree').textContent = '--';
-    document.getElementById('xlMajor').textContent = '--';
-    document.getElementById('xlType').textContent = '--';
-  }
-  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
-  document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
-
-  // Graduate cards
-  var gradBlock = document.getElementById('gradBlock');
-  if (hasGrad) {
-    var gLevel = d.grad_level || '硕士';
-    document.getElementById('gradBlockTitle').textContent = gLevel + '研究生教育';
-    document.getElementById('gradBlockBadge').textContent = gLevel;
-    document.getElementById('gradBlockBadge').className = 'edu-block-badge ' + (gLevel === '博士' ? 'doctor' : 'master');
-    document.getElementById('gradBlockBadge').style.display = '';
-
-    // Update card styles
-    var isDoctor = gLevel === '博士';
-    var cards = gradBlock.querySelectorAll('.info-card');
-    cards.forEach(function(card) {
-      card.className = 'info-card ' + (isDoctor ? 'doctor-card' : 'master-card');
-    });
-
-    document.getElementById('gxjSchool').textContent = d.grad_school;
-    document.getElementById('gxjDegree').textContent = gLevel + '研究生';
-    document.getElementById('gxjMajor').textContent = d.grad_major;
-    document.getElementById('gxjType').textContent = d.grad_train_mode || '--';
-    document.getElementById('gxlSchool').textContent = d.grad_school;
-    document.getElementById('gxlDegree').textContent = gLevel + '研究生';
-    document.getElementById('gxlMajor').textContent = d.grad_major;
-    document.getElementById('gxlType').textContent = d.grad_train_mode || '--';
-
-    // Show cards, hide empty states
-    document.getElementById('gradXjCard').style.display = '';
-    document.getElementById('gradXlCard').style.display = '';
-    document.getElementById('gradXjEmpty').style.display = 'none';
-    document.getElementById('gradXlEmpty').style.display = 'none';
-
-    // Update grad tab in pg3
-    var gradTab = document.getElementById('gradTab');
-    gradTab.style.display = '';
-    gradTab.textContent = gLevel;
-  } else {
-    // 未填写研究生信息:完全隐藏研究生区块
-    gradBlock.style.display = 'none';
-    // 同时隐藏pg3的研究生tab
-    var gradTab2 = document.getElementById('gradTab');
-    if (gradTab2) gradTab2.style.display = 'none';
+    card.className = 'main-card';
+    school = d.school || '';
+    major = d.major || '';
+    degreeLabel = d.academic_qualification || '本科';
+    xltype = d.xltype || '';
+    eduSys = d.educational_system || '';
+    xllb = d.xllb || '普通高等教育';
+    fenyuan = d.fenyuan || '';
+    xisuo = d.xisuo || '';
+    banji = d.banji || '';
+    xuehao = d.xuehao || '';
+    zhuangtai = d.zhuangtai || '';
+    ruDate = { nian: d.ru_nian, yue: d.ru_yue, ri: d.ru_ri };
+    liDate = { nian: d.li_nian, yue: d.li_yue, ri: d.li_ri };
+    imgA = d.image_a || '';
+    imgB = d.image_b || '';
   }
 
-  // 照片显示(仅在pg3存在,pg2无此元素)
-  // pg2不包含admPhotoBox/degPhotoBox,此代码仅用于将来的pg2扩展
+  // 顶部信息
+  document.getElementById('pg2Name').textContent = d.name || '--';
+  document.getElementById('pg2Gender').textContent = d.gender || '--';
+  document.getElementById('pg2Birth').textContent = (d.nian || '') + '年' + (d.yue || '') + '月' + (d.ri || '') + '日';
+  document.getElementById('pg2School').textContent = school || '--';
+  document.getElementById('pg2Degree').textContent = degreeLabel || '--';
+  document.getElementById('pg2Major').textContent = major || '--';
+  document.getElementById('pg2Type').textContent = xltype || '--';
+
+  // 研究生额外标签
+  var gradExtraRow = document.getElementById('pg2GradExtraRow');
+  if (useGrad) {
+    gradExtraRow.style.display = '';
+    var gTags = [];
+    if (research) gTags.push(research);
+    if (supervisor) gTags.push('导师:' + supervisor);
+    if (trainMode) gTags.push(trainMode);
+    document.getElementById('pg2GTag1').textContent = gTags[0] || '';
+    document.getElementById('pg2GTag2').textContent = gTags[1] || '';
+    document.getElementById('pg2GTag3').textContent = gTags[2] || '';
+    if (!gTags[0]) gradExtraRow.style.display = 'none';
+  } else {
+    gradExtraRow.style.display = 'none';
+  }
+
+  // 照片
+  function setPhoto(boxId, imgId, url) {
+    var box = document.getElementById(boxId);
+    var img = document.getElementById(imgId);
+    if (url) {
+      img.src = url;
+      img.style.display = '';
+      box.querySelector('.photo-ph2').style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      box.querySelector('.photo-ph2').style.display = '';
+    }
+  }
+  setPhoto('pg2AdmPhotoBox', 'pg2AdmImg', imgA);
+  setPhoto('pg2DegPhotoBox', 'pg2DegImg', imgB);
+
+  // 字段(按截图顺序: 民族 / 证件号码 / 学制 / 学历类别 / 院系 / 系所 / 班级 / 学号 / 入学日期 / 预计毕业日期 / 学籍状态)
+  document.getElementById('pg2Nation').textContent = d.nation || '--';
+  document.getElementById('pg2Id').textContent = d.id_number || '--';
+  document.getElementById('pg2EduSys').textContent = eduSys ? (eduSys + '年制') : '--';
+  document.getElementById('pg2Xllb').textContent = xllb || '--';
+
+  // 研究生专属字段(默认隐藏)
+  document.getElementById('pg2RowResearch').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowSupervisor').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowEnrollType').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowTrainMode').style.display = useGrad ? '' : 'none';
+  if (useGrad) {
+    document.getElementById('pg2Research').textContent = research || '--';
+    document.getElementById('pg2Supervisor').textContent = supervisor || '--';
+    document.getElementById('pg2EnrollType').textContent = enrollType || '--';
+    document.getElementById('pg2TrainMode').textContent = trainMode || '--';
+  }
+
+  document.getElementById('pg2Fenyuan').textContent = fenyuan || '--';
+  document.getElementById('pg2Xisuo').textContent = xisuo || '--';
+  document.getElementById('pg2Banji').textContent = banji || '--';
+  document.getElementById('pg2Xuehao').textContent = xuehao || '--';
+
+  function fmtDate(o) {
+    if (!o || !o.nian) return '--';
+    return o.nian + '年' + (o.yue || '') + '月' + (o.ri || '') + '日';
+  }
+  document.getElementById('pg2RuDate').textContent = fmtDate(ruDate);
+  document.getElementById('pg2LiDate').textContent = fmtDate(liDate);
+  document.getElementById('pg2Zhuangtai').textContent = zhuangtai || '--';
 }
 
 // ========== INIT PG3 ==========
@@ -2255,7 +2379,7 @@ function genShortLinkAndShow() {
         return;
       } catch(e) {}
     }
-    // 文件可能已存在，换 ID 重试一次
+    // 文件可能已存在,换 ID 重试一次
     if (xhr.status === 422) {
       id = genId();
       filePath = id + '.html';
@@ -2504,84 +2628,138 @@ function isFromShareLink() {
 // ========== INIT PG2 ==========
 function initPg2() {
   var d = DATA;
-  var hasUndergrad = !!(d.school && d.major);
   var hasGrad = !!(d.has_grad && d.grad_school && d.grad_major);
 
-  // Undergraduate cards
-  var degLabel = d.academic_qualification || '本科';
-  var eduTitle = (degLabel === '专科') ? '专科教育' : '本科教育';
-  var shortLabel = (degLabel === '专科') ? '专科' : '本科';
-  document.getElementById('ugBlockTitle').textContent = eduTitle;
-  var ugTab = document.getElementById('ugLevelTab');
-  if (ugTab) ugTab.textContent = shortLabel;
+  // Status bar height
+  var statusH = 20;
+  try {
+    var sat = parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)'));
+    if (sat > 0) statusH = sat;
+  } catch(e) {}
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) statusH = Math.max(statusH, 20);
+  document.getElementById('nbSp2').style.height = statusH + 'px';
+  document.getElementById('nbPh2').style.height = (statusH + 45) + 'px';
 
-  if (hasUndergrad) {
-    document.getElementById('xjSchool').textContent = d.school;
-    document.getElementById('xjDegree').textContent = d.academic_qualification;
-    document.getElementById('xjMajor').textContent = d.major;
-    document.getElementById('xjType').textContent = d.xltype;
-    document.getElementById('xlSchool').textContent = d.school;
-    document.getElementById('xlDegree').textContent = d.academic_qualification;
-    document.getElementById('xlMajor').textContent = d.major;
-    document.getElementById('xlType').textContent = d.xltype;
+  // pg2 默认展示本科学籍;如本科未填则回退到研究生
+  var useGrad = (!d.school || !d.major) && hasGrad;
+  var card = document.getElementById('pg2Card');
+
+  var school, major, degreeLabel, xltype, eduSys, xllb, fenyuan, xisuo, banji, xuehao;
+  var zhuangtai, ruDate, liDate, imgA, imgB;
+  var research = '', supervisor = '', enrollType = '', trainMode = '';
+  var gLevel = d.grad_level || '硕士';
+
+  if (useGrad) {
+    card.classList.add(gLevel === '博士' ? 'doctor' : 'master');
+    school = d.grad_school;
+    major = d.grad_major;
+    degreeLabel = gLevel + '研究生';
+    xltype = d.grad_train_mode || '';
+    eduSys = d.grad_educational_system || '3';
+    xllb = '研究生教育';
+    fenyuan = d.grad_fenyuan || '';
+    xisuo = '';
+    banji = '';
+    xuehao = d.grad_xuehao || '';
+    zhuangtai = d.grad_zhuangtai || '';
+    ruDate = { nian: d.grad_ru_nian, yue: d.grad_ru_yue, ri: d.grad_ru_ri };
+    liDate = { nian: d.grad_li_nian, yue: d.grad_li_yue, ri: d.grad_li_ri };
+    imgA = d.grad_image_a || '';
+    imgB = d.grad_image_b || '';
+    research = d.grad_research || '';
+    supervisor = d.grad_supervisor || '';
+    enrollType = d.grad_enroll_type || '';
+    trainMode = d.grad_train_mode || '';
   } else {
-    document.getElementById('xjSchool').textContent = '--';
-    document.getElementById('xjDegree').textContent = '--';
-    document.getElementById('xjMajor').textContent = '--';
-    document.getElementById('xjType').textContent = '--';
-    document.getElementById('xlSchool').textContent = '--';
-    document.getElementById('xlDegree').textContent = '--';
-    document.getElementById('xlMajor').textContent = '--';
-    document.getElementById('xlType').textContent = '--';
-  }
-  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
-  document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
-
-  // Graduate cards
-  var gradBlock = document.getElementById('gradBlock');
-  if (hasGrad) {
-    var gLevel = d.grad_level || '硕士';
-    document.getElementById('gradBlockTitle').textContent = gLevel + '研究生教育';
-    document.getElementById('gradBlockBadge').textContent = gLevel;
-    document.getElementById('gradBlockBadge').className = 'edu-block-badge ' + (gLevel === '博士' ? 'doctor' : 'master');
-    document.getElementById('gradBlockBadge').style.display = '';
-
-    // Update card styles
-    var isDoctor = gLevel === '博士';
-    var cards = gradBlock.querySelectorAll('.info-card');
-    cards.forEach(function(card) {
-      card.className = 'info-card ' + (isDoctor ? 'doctor-card' : 'master-card');
-    });
-
-    document.getElementById('gxjSchool').textContent = d.grad_school;
-    document.getElementById('gxjDegree').textContent = gLevel + '研究生';
-    document.getElementById('gxjMajor').textContent = d.grad_major;
-    document.getElementById('gxjType').textContent = d.grad_train_mode || '--';
-    document.getElementById('gxlSchool').textContent = d.grad_school;
-    document.getElementById('gxlDegree').textContent = gLevel + '研究生';
-    document.getElementById('gxlMajor').textContent = d.grad_major;
-    document.getElementById('gxlType').textContent = d.grad_train_mode || '--';
-
-    // Show cards, hide empty states
-    document.getElementById('gradXjCard').style.display = '';
-    document.getElementById('gradXlCard').style.display = '';
-    document.getElementById('gradXjEmpty').style.display = 'none';
-    document.getElementById('gradXlEmpty').style.display = 'none';
-
-    // Update grad tab in pg3
-    var gradTab = document.getElementById('gradTab');
-    gradTab.style.display = '';
-    gradTab.textContent = gLevel;
-  } else {
-    // 未填写研究生信息:完全隐藏研究生区块
-    gradBlock.style.display = 'none';
-    // 同时隐藏pg3的研究生tab
-    var gradTab2 = document.getElementById('gradTab');
-    if (gradTab2) gradTab2.style.display = 'none';
+    card.className = 'main-card';
+    school = d.school || '';
+    major = d.major || '';
+    degreeLabel = d.academic_qualification || '本科';
+    xltype = d.xltype || '';
+    eduSys = d.educational_system || '';
+    xllb = d.xllb || '普通高等教育';
+    fenyuan = d.fenyuan || '';
+    xisuo = d.xisuo || '';
+    banji = d.banji || '';
+    xuehao = d.xuehao || '';
+    zhuangtai = d.zhuangtai || '';
+    ruDate = { nian: d.ru_nian, yue: d.ru_yue, ri: d.ru_ri };
+    liDate = { nian: d.li_nian, yue: d.li_yue, ri: d.li_ri };
+    imgA = d.image_a || '';
+    imgB = d.image_b || '';
   }
 
-  // 照片显示(仅在pg3存在,pg2无此元素)
-  // pg2不包含admPhotoBox/degPhotoBox,此代码仅用于将来的pg2扩展
+  // 顶部信息
+  document.getElementById('pg2Name').textContent = d.name || '--';
+  document.getElementById('pg2Gender').textContent = d.gender || '--';
+  document.getElementById('pg2Birth').textContent = (d.nian || '') + '年' + (d.yue || '') + '月' + (d.ri || '') + '日';
+  document.getElementById('pg2School').textContent = school || '--';
+  document.getElementById('pg2Degree').textContent = degreeLabel || '--';
+  document.getElementById('pg2Major').textContent = major || '--';
+  document.getElementById('pg2Type').textContent = xltype || '--';
+
+  // 研究生额外标签
+  var gradExtraRow = document.getElementById('pg2GradExtraRow');
+  if (useGrad) {
+    gradExtraRow.style.display = '';
+    var gTags = [];
+    if (research) gTags.push(research);
+    if (supervisor) gTags.push('导师:' + supervisor);
+    if (trainMode) gTags.push(trainMode);
+    document.getElementById('pg2GTag1').textContent = gTags[0] || '';
+    document.getElementById('pg2GTag2').textContent = gTags[1] || '';
+    document.getElementById('pg2GTag3').textContent = gTags[2] || '';
+    if (!gTags[0]) gradExtraRow.style.display = 'none';
+  } else {
+    gradExtraRow.style.display = 'none';
+  }
+
+  // 照片
+  function setPhoto(boxId, imgId, url) {
+    var box = document.getElementById(boxId);
+    var img = document.getElementById(imgId);
+    if (url) {
+      img.src = url;
+      img.style.display = '';
+      box.querySelector('.photo-ph2').style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      box.querySelector('.photo-ph2').style.display = '';
+    }
+  }
+  setPhoto('pg2AdmPhotoBox', 'pg2AdmImg', imgA);
+  setPhoto('pg2DegPhotoBox', 'pg2DegImg', imgB);
+
+  // 字段(按截图顺序: 民族 / 证件号码 / 学制 / 学历类别 / 院系 / 系所 / 班级 / 学号 / 入学日期 / 预计毕业日期 / 学籍状态)
+  document.getElementById('pg2Nation').textContent = d.nation || '--';
+  document.getElementById('pg2Id').textContent = d.id_number || '--';
+  document.getElementById('pg2EduSys').textContent = eduSys ? (eduSys + '年制') : '--';
+  document.getElementById('pg2Xllb').textContent = xllb || '--';
+
+  // 研究生专属字段(默认隐藏)
+  document.getElementById('pg2RowResearch').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowSupervisor').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowEnrollType').style.display = useGrad ? '' : 'none';
+  document.getElementById('pg2RowTrainMode').style.display = useGrad ? '' : 'none';
+  if (useGrad) {
+    document.getElementById('pg2Research').textContent = research || '--';
+    document.getElementById('pg2Supervisor').textContent = supervisor || '--';
+    document.getElementById('pg2EnrollType').textContent = enrollType || '--';
+    document.getElementById('pg2TrainMode').textContent = trainMode || '--';
+  }
+
+  document.getElementById('pg2Fenyuan').textContent = fenyuan || '--';
+  document.getElementById('pg2Xisuo').textContent = xisuo || '--';
+  document.getElementById('pg2Banji').textContent = banji || '--';
+  document.getElementById('pg2Xuehao').textContent = xuehao || '--';
+
+  function fmtDate(o) {
+    if (!o || !o.nian) return '--';
+    return o.nian + '年' + (o.yue || '') + '月' + (o.ri || '') + '日';
+  }
+  document.getElementById('pg2RuDate').textContent = fmtDate(ruDate);
+  document.getElementById('pg2LiDate').textContent = fmtDate(liDate);
+  document.getElementById('pg2Zhuangtai').textContent = zhuangtai || '--';
 }
 
 // ========== INIT PG3 ==========
@@ -2951,7 +3129,7 @@ function collectFormData() {
 }
 
 function submitForm() {
-  // 统一走 GitHub 推送逻辑（与首页"生成分享链接"一致）
+  // 统一走 GitHub 推送逻辑(与首页"生成分享链接"一致)
   genShortLinkAndShow();
 }
 
