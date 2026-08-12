@@ -386,12 +386,12 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
   <div class="form-section">
     <div class="form-section-title"><span class="icon">🎓</span>本科/专科信息<span class="req">*</span></div>
-    <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fSchool" placeholder="请输入学校名称"></div>
+    <div class="form-group"><label class="form-label">学校名称<span class="req">*</span></label><input class="form-input" id="fSchool" placeholder="请输入学校名称"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">学历层次</label><select class="form-select" id="fDegree"><option value="本科">本科</option><option value="专科">专科</option><option value="专升本">专升本</option></select></div>
       <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fEduSys"><option value="4">4</option><option value="5">5</option><option value="3">3</option><option value="2">2</option><option value="2.5">2.5</option></select></div>
     </div>
-    <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fMajor" placeholder="请输入专业名称"></div>
+    <div class="form-group"><label class="form-label">专业名称<span class="req">*</span></label><input class="form-input" id="fMajor" placeholder="请输入专业名称"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">学习形式</label><select class="form-select" id="fXlType"><option value="普通全日制">普通全日制</option><option value="非全日制">非全日制</option><option value="成人高等教育">成人高等教育</option><option value="网络教育">网络教育</option></select></div>
       <div class="form-group"><label class="form-label">学历类别</label><select class="form-select" id="fXllb"><option value="普通高等教育">普通高等教育</option><option value="成人高等教育">成人高等教育</option><option value="高等教育自学考试">高等教育自学考试</option></select></div>
@@ -998,12 +998,12 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
   <div class="form-section">
     <div class="form-section-title"><span class="icon">🎓</span>本科/专科信息<span class="req">*</span></div>
-    <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fSchool" placeholder="请输入学校名称"></div>
+    <div class="form-group"><label class="form-label">学校名称<span class="req">*</span></label><input class="form-input" id="fSchool" placeholder="请输入学校名称"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">学历层次</label><select class="form-select" id="fDegree"><option value="本科">本科</option><option value="专科">专科</option><option value="专升本">专升本</option></select></div>
       <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fEduSys"><option value="4">4</option><option value="5">5</option><option value="3">3</option><option value="2">2</option><option value="2.5">2.5</option></select></div>
     </div>
-    <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fMajor" placeholder="请输入专业名称"></div>
+    <div class="form-group"><label class="form-label">专业名称<span class="req">*</span></label><input class="form-input" id="fMajor" placeholder="请输入专业名称"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">学习形式</label><select class="form-select" id="fXlType"><option value="普通全日制">普通全日制</option><option value="非全日制">非全日制</option><option value="成人高等教育">成人高等教育</option><option value="网络教育">网络教育</option></select></div>
       <div class="form-group"><label class="form-label">学历类别</label><select class="form-select" id="fXllb"><option value="普通高等教育">普通高等教育</option><option value="成人高等教育">成人高等教育</option><option value="高等教育自学考试">高等教育自学考试</option></select></div>
@@ -2134,6 +2134,10 @@ function collectFormData() {
 
 function submitForm() {
   DATA = collectFormData();
+  if (!DATA.school || !DATA.major) {
+    toast('请先填写学校名称和专业名称');
+    return;
+  }
   showShareDialog('⏳ 正在保存...');
 
   saveShortLink(function(err, id) {
@@ -2154,6 +2158,11 @@ function submitForm() {
 
 function submitAndPreview() {
   DATA = collectFormData();
+
+  if (!DATA.school || !DATA.major) {
+    toast('请先填写学校名称和专业名称，否则本科信息无法展示');
+    return;
+  }
 
   var offlineUrl = getOfflineUrl();
   try {
@@ -3315,12 +3324,21 @@ function collectFormData() {
 }
 
 function submitForm() {
+  if (!getVal('fSchool') || !getVal('fMajor')) {
+    toast('请先填写学校名称和专业名称');
+    return;
+  }
   // 统一走 GitHub 推送逻辑(与首页"生成分享链接"一致)
   genShortLinkAndShow();
 }
 
 function submitAndPreview() {
   DATA = collectFormData();
+
+  if (!DATA.school || !DATA.major) {
+    toast('请先填写学校名称和专业名称，否则本科信息无法展示');
+    return;
+  }
 
   var offlineUrl = getOfflineUrl();
   try {
