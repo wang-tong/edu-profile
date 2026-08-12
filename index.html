@@ -93,7 +93,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .sat-desc{font-size:11px;color:var(--text-gray)}
 .sat-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .sat-tag{background:var(--primary-bg);border-radius:10px;padding:4px 12px;font-size:11px;color:var(--primary);cursor:pointer}
-.edu-block{margin:15px 12px 0}
+.edu-block{margin:5px 12px 0}
 .edu-block-header{display:flex;align-items:center;margin-bottom:10px}
 .edu-block-title{font-size:16px;font-weight:700;color:var(--text)}
 .edu-block-badge{background:var(--primary);color:#fff;border-radius:3px;padding:2px 8px;margin-left:8px;font-size:10px}
@@ -289,7 +289,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
 <div class="info-card master-card" id="gXwCard" style="display:none" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxwSchool">--</span><span class="info-card-degree" id="gxwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxwType">--</span></div></div>
-<div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="empty-card" id="gXwEmpty" style="display:none"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
 
@@ -304,7 +304,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="empty-card" id="grad2XlEmpty" style="display:none"><span class="empty-text">暂无博士学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="g2XwCount">(0)</span></div>
 <div class="info-card doctor-card" id="g2XwCard" style="display:none" onclick="navToDetail(2)"><div class="info-card-top"><span class="info-card-school" id="g2xwSchool">--</span><span class="info-card-degree" id="g2xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="g2xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="g2xwType">--</span></div></div>
-<div class="empty-card" id="g2XwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="empty-card" id="g2XwEmpty" style="display:none"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
 
@@ -315,10 +315,10 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <span class="nb-title">学籍信息</span>
 </div></nav><div class="nb-ph" id="nbPh3"></div>
 
-<div class="level-tabs" id="levelTabs">
+<div class="level-tabs" id="levelTabs" style="display:none">
   <div class="level-tab active" data-idx="0" id="ugLevelTab">本科</div>
   <div class="level-tab" data-idx="1" id="gradTab" style="display:none">硕士</div>
-  <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
+    <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
 </div>
 
 <div class="main-card" id="detailCard">
@@ -714,7 +714,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .sat-desc{font-size:11px;color:var(--text-gray)}
 .sat-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .sat-tag{background:var(--primary-bg);border-radius:10px;padding:4px 12px;font-size:11px;color:var(--primary);cursor:pointer}
-.edu-block{margin:15px 12px 0}
+.edu-block{margin:5px 12px 0}
 .edu-block-header{display:flex;align-items:center;margin-bottom:10px}
 .edu-block-title{font-size:16px;font-weight:700;color:var(--text)}
 .edu-block-badge{background:var(--primary);color:#fff;border-radius:3px;padding:2px 8px;margin-left:8px;font-size:10px}
@@ -910,7 +910,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
 <div class="info-card master-card" id="gXwCard" style="display:none" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxwSchool">--</span><span class="info-card-degree" id="gxwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxwType">--</span></div></div>
-<div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="empty-card" id="gXwEmpty" style="display:none"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
 
@@ -925,7 +925,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="empty-card" id="grad2XlEmpty" style="display:none"><span class="empty-text">暂无博士学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="g2XwCount">(0)</span></div>
 <div class="info-card doctor-card" id="g2XwCard" style="display:none" onclick="navToDetail(2)"><div class="info-card-top"><span class="info-card-school" id="g2xwSchool">--</span><span class="info-card-degree" id="g2xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="g2xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="g2xwType">--</span></div></div>
-<div class="empty-card" id="g2XwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
+<div class="empty-card" id="g2XwEmpty" style="display:none"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
 
@@ -936,10 +936,10 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <span class="nb-title">学籍信息</span>
 </div></nav><div class="nb-ph" id="nbPh3"></div>
 
-<div class="level-tabs" id="levelTabs">
+<div class="level-tabs" id="levelTabs" style="display:none">
   <div class="level-tab active" data-idx="0" id="ugLevelTab">本科</div>
   <div class="level-tab" data-idx="1" id="gradTab" style="display:none">硕士</div>
-  <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
+    <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
 </div>
 
 <div class="main-card" id="detailCard">
@@ -1762,7 +1762,8 @@ function initPg3() {
   gradTab.textContent = '硕士';
   var gradTabB = document.getElementById('gradTab2');
   if (gradTabB) {
-    gradTabB.style.display = hasGrad2 ? '' : 'none';
+    // 博士Tab始终隐藏(博士信息只在 pg2 列表页查看,不在 pg3 切换)
+    gradTabB.style.display = 'none';
     gradTabB.textContent = '博士';
   }
 
@@ -2994,7 +2995,8 @@ function initPg3() {
   gradTab.textContent = '硕士';
   var gradTabB = document.getElementById('gradTab2');
   if (gradTabB) {
-    gradTabB.style.display = hasGrad2 ? '' : 'none';
+    // 博士Tab始终隐藏(博士信息只在 pg2 列表页查看,不在 pg3 切换)
+    gradTabB.style.display = 'none';
     gradTabB.textContent = '博士';
   }
 
