@@ -1322,7 +1322,7 @@ function initPg3() {
 
   // Graduate extra tags
   var extraRow = document.getElementById('gradExtraRow');
-  if (isGrad) {
+  if (isGrad && !isDoctor) { // 用户要求:博士学历时隐藏博士三卡片(学术型/全日制/申请考核标签)
     extraRow.style.display = 'flex';
     document.getElementById('gTag1').textContent = gd.degree_type || '';
     document.getElementById('gTag2').textContent = trainMode || '';
