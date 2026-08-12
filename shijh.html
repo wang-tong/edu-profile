@@ -1318,10 +1318,9 @@ function collectFormData() {
   d.image_b = getVal('fImgB');
 
   // Graduate - 仅在填写了学校+专业后才视为有效研究生数据
-  var hasGradToggled = document.getElementById('toggleGrad').classList.contains('open');
   var gradSchool = getVal('fGSchool');
   var gradMajor = getVal('fGMajor');
-  var hasGrad = hasGradToggled && !!(gradSchool && gradMajor);
+  var hasGrad = !!(gradSchool && gradMajor);
   d.has_grad = hasGrad;
   if (hasGrad) {
     d.grad_level = currentGradType;

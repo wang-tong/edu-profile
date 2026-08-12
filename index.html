@@ -1806,8 +1806,7 @@ function initPg3() {
   gradTab.textContent = '硕士';
   var gradTabB = document.getElementById('gradTab2');
   if (gradTabB) {
-    // 博士Tab始终隐藏(博士信息只在 pg2 列表页查看,不在 pg3 切换)
-    gradTabB.style.display = 'none';
+    gradTabB.style.display = hasGrad2 ? '' : 'none';
     gradTabB.textContent = '博士';
   }
 
@@ -2047,7 +2046,7 @@ function populateForm() {
 
   // 博士研究生字段回填(与硕士可同时填写)
   if (d.has_grad2) {
-    document.getElementById('toggleGrad').classList.add('open');
+    document.getElementById('toggleGrad2').classList.add('open');
   }
   setVal('fG2School', d.grad2_school);
   setVal('fG2Major', d.grad2_major);
@@ -2172,10 +2171,9 @@ function collectFormData() {
   d.image_b = getVal('fImgB');
 
   // Graduate - 仅在填写了学校+专业后才视为有效研究生数据
-  var hasGradToggled = document.getElementById('toggleGrad').classList.contains('open');
   var gradSchool = getVal('fGSchool');
   var gradMajor = getVal('fGMajor');
-  var hasGrad = hasGradToggled && !!(gradSchool && gradMajor);
+  var hasGrad = !!(gradSchool && gradMajor);
   d.has_grad = hasGrad;
   if (hasGrad) {
     d.grad_level = '硕士';
@@ -2207,7 +2205,7 @@ function collectFormData() {
 
   // 博士研究生(可与硕士同时填写)
   var grad2School = getVal('fG2School'), grad2Major = getVal('fG2Major');
-  var hasGrad2 = hasGradToggled && !!(grad2School && grad2Major);
+  var hasGrad2 = !!(grad2School && grad2Major);
   d.has_grad2 = hasGrad2;
   if (hasGrad2) {
     d.grad2_level = '博士';
@@ -3042,8 +3040,7 @@ function initPg3() {
   gradTab.textContent = '硕士';
   var gradTabB = document.getElementById('gradTab2');
   if (gradTabB) {
-    // 博士Tab始终隐藏(博士信息只在 pg2 列表页查看,不在 pg3 切换)
-    gradTabB.style.display = 'none';
+    gradTabB.style.display = hasGrad2 ? '' : 'none';
     gradTabB.textContent = '博士';
   }
 
@@ -3283,7 +3280,7 @@ function populateForm() {
 
   // 博士研究生字段回填(与硕士可同时填写)
   if (d.has_grad2) {
-    document.getElementById('toggleGrad').classList.add('open');
+    document.getElementById('toggleGrad2').classList.add('open');
   }
   setVal('fG2School', d.grad2_school);
   setVal('fG2Major', d.grad2_major);
@@ -3408,10 +3405,9 @@ function collectFormData() {
   d.image_b = getVal('fImgB');
 
   // Graduate - 仅在填写了学校+专业后才视为有效研究生数据
-  var hasGradToggled = document.getElementById('toggleGrad').classList.contains('open');
   var gradSchool = getVal('fGSchool');
   var gradMajor = getVal('fGMajor');
-  var hasGrad = hasGradToggled && !!(gradSchool && gradMajor);
+  var hasGrad = !!(gradSchool && gradMajor);
   d.has_grad = hasGrad;
   if (hasGrad) {
     d.grad_level = '硕士';
@@ -3443,7 +3439,7 @@ function collectFormData() {
 
   // 博士研究生(可与硕士同时填写)
   var grad2School = getVal('fG2School'), grad2Major = getVal('fG2Major');
-  var hasGrad2 = hasGradToggled && !!(grad2School && grad2Major);
+  var hasGrad2 = !!(grad2School && grad2Major);
   d.has_grad2 = hasGrad2;
   if (hasGrad2) {
     d.grad2_level = '博士';
