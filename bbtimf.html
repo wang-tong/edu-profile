@@ -272,7 +272,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
 <div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
-<div class="info-card" id="ugXwCard" style="display:none"><div class="info-card-top"><span class="info-card-school" id="xwSchool">--</span><span class="info-card-degree" id="xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xwType">--</span></div></div>
+<div class="info-card" id="ugXwCard" style="display:none" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xwSchool">--</span><span class="info-card-degree" id="xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xwType">--</span></div></div>
 <div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 
@@ -286,7 +286,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="info-card master-card" id="gradXlCard" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxlSchool">--</span><span class="info-card-degree" id="gxlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxlType">--</span></div></div>
 <div class="empty-card" id="gradXlEmpty" style="display:none"><span class="empty-text">暂无研究生学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="gXwCount">(0)</span></div>
-<div class="info-card master-card" id="gXwCard" style="display:none"><div class="info-card-top"><span class="info-card-school" id="gxwSchool">--</span><span class="info-card-degree" id="gxwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxwType">--</span></div></div>
+<div class="info-card master-card" id="gXwCard" style="display:none" onclick="navToDetail(1)"><div class="info-card-top"><span class="info-card-school" id="gxwSchool">--</span><span class="info-card-degree" id="gxwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="gxwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="gxwType">--</span></div></div>
 <div class="empty-card" id="gXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
@@ -301,7 +301,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <div class="info-card doctor-card" id="grad2XlCard" onclick="navToDetail(2)"><div class="info-card-top"><span class="info-card-school" id="g2xlSchool">--</span><span class="info-card-degree" id="g2xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="g2xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="g2xlType">--</span></div></div>
 <div class="empty-card" id="grad2XlEmpty" style="display:none"><span class="empty-text">暂无博士学历信息</span></div></div>
 <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="g2XwCount">(0)</span></div>
-<div class="info-card doctor-card" id="g2XwCard" style="display:none"><div class="info-card-top"><span class="info-card-school" id="g2xwSchool">--</span><span class="info-card-degree" id="g2xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="g2xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="g2xwType">--</span></div></div>
+<div class="info-card doctor-card" id="g2XwCard" style="display:none" onclick="navToDetail(2)"><div class="info-card-top"><span class="info-card-school" id="g2xwSchool">--</span><span class="info-card-degree" id="g2xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="g2xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="g2xwType">--</span></div></div>
 <div class="empty-card" id="g2XwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 </div>
@@ -494,6 +494,11 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
           <div class="form-group"><label class="form-label">学位类型</label><select class="form-select" id="fG2DegreeType"><option value="学术型">学术型</option><option value="专业型">专业型</option></select></div>
           <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fG2EduSys"><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="5">5</option></select></div>
         </div>
+        <div class="form-sub-section-title" style="margin-top:18px">🎓 博士学位信息 <span style="font-size:11px;color:#999;font-weight:normal">(可选,参考学信网)</span></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">学位证书编号</label><input class="form-input" id="fG2DegreeCert" placeholder="学位证书编号"></div>
+          <div class="form-group"><label class="form-label">学位授予日期</label><input class="form-input" id="fG2DegreeDate" type="date"></div>
+        </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">入学方式</label><select class="form-select" id="fG2EnrollType"><option value="申请考核">申请考核</option><option value="全国统考">全国统考</option><option value="推荐免试">推荐免试</option></select></div>
           <div class="form-group"><label class="form-label">培养方式</label><select class="form-select" id="fG2TrainMode"><option value="全日制">全日制</option><option value="非全日制">非全日制</option></select></div>
@@ -617,6 +622,8 @@ var DEFAULT_DATA = {
   "grad2_school": "清华大学",
   "grad2_major": "法学",
   "grad2_degree_type": "学术型",
+  "grad2_degree_cert": "",
+  "grad2_degree_date": "",
   "grad2_educational_system": "4",
   "grad2_enroll_type": "申请考核",
   "grad2_train_mode": "全日制",
@@ -1165,7 +1172,7 @@ function initPg2() {
     document.getElementById('grad2XlEmpty').style.display = 'none';
 
     // 学位信息卡片(与本科一致):填写了学位类型则显示
-    var hasG2Degree = !!(d.grad2_degree_type);
+    var hasG2Degree = !!(d.grad2_degree_type || d.grad2_degree_cert); // 与本科一致:学位类型或证书编号任一存在即显示学位卡
     document.getElementById('g2XwCount').textContent = hasG2Degree ? '(1)' : '(0)';
     var g2XwCardEl = document.getElementById('g2XwCard');
     var g2XwEmptyEl = document.getElementById('g2XwEmpty');
@@ -1173,7 +1180,7 @@ function initPg2() {
       g2XwCardEl.style.display = '';
       g2XwEmptyEl.style.display = 'none';
       document.getElementById('g2xwSchool').textContent = d.grad2_school || '--';
-      document.getElementById('g2xwDegree').textContent = '博士学位';
+      document.getElementById('g2xwDegree').textContent = (d.grad2_level || '博士') + '学位'; // 与硕士一致:按学位层次动态拼接
       document.getElementById('g2xwMajor').textContent = d.grad2_major || '--';
       document.getElementById('g2xwType').textContent = d.grad2_degree_type || '--';
     } else {
@@ -1453,6 +1460,8 @@ function populateForm() {
   setVal('fG2School', d.grad2_school);
   setVal('fG2Major', d.grad2_major);
   setVal('fG2DegreeType', d.grad2_degree_type);
+  setVal('fG2DegreeCert', d.grad2_degree_cert);
+  setVal('fG2DegreeDate', d.grad2_degree_date);
   setVal('fG2EduSys', d.grad2_educational_system);
   setVal('fG2EnrollType', d.grad2_enroll_type);
   setVal('fG2TrainMode', d.grad2_train_mode);
@@ -1610,6 +1619,8 @@ function collectFormData() {
     d.grad2_school = grad2School;
     d.grad2_major = grad2Major;
     d.grad2_degree_type = getVal('fG2DegreeType');
+    d.grad2_degree_cert = getVal('fG2DegreeCert');
+    d.grad2_degree_date = getVal('fG2DegreeDate');
     d.grad2_educational_system = getVal('fG2EduSys');
     d.grad2_enroll_type = getVal('fG2EnrollType');
     d.grad2_train_mode = getVal('fG2TrainMode');
