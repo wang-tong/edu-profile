@@ -172,6 +172,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .form-container{padding:12px 16px 100px}
 .form-section{background:var(--white);border-radius:12px;padding:16px;margin-bottom:12px}
 .form-section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:6px}
+.form-sub-section-title{font-size:13px;font-weight:700;color:var(--text);margin:16px 0 10px;display:flex;align-items:center;gap:4px}
 .form-section-title .icon{font-size:18px}
 .form-group{margin-bottom:14px}
 .form-group:last-child{margin-bottom:0}
@@ -273,6 +274,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
 <div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
+<div class="info-card" id="ugXwCard" style="display:none"><div class="info-card-top"><span class="info-card-school" id="xwSchool">--</span><span class="info-card-degree" id="xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xwType">--</span></div></div>
 <div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 
@@ -394,6 +396,15 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
       <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fLiDate" type="date"></div>
     </div>
     <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option><option value="肄业">肄业</option></select></div>
+    <div class="form-sub-section-title">🎓 学位信息 <span style="font-size:11px;color:#999;font-weight:normal">(可选,参考学信网)</span></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学位层次</label><select class="form-select" id="fDegreeLevel"><option value="学士">学士</option><option value="硕士">硕士</option><option value="博士">博士</option></select></div>
+      <div class="form-group"><label class="form-label">学位类别</label><input class="form-input" id="fDegreeCat" placeholder="如:工学学士"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学位证书编号</label><input class="form-input" id="fDegreeCert" placeholder="学位证书编号"></div>
+      <div class="form-group"><label class="form-label">学位授予日期</label><input class="form-input" id="fDegreeDate" type="date"></div>
+    </div>
     <div class="form-group">
       <label class="form-label">录取照片 (可选)</label>
       <div class="upload-row">
@@ -508,6 +519,8 @@ var DEFAULT_DATA = {
   li_nian:'', li_yue:'06', li_ri:'30',
   nian:'', yue:'', ri:'',
   image_a:'', image_b:'',
+  // degree fields (undergrad) - 参考学信网学位信息
+  degree_level:'学士', degree_cat:'', degree_cert:'', degree_date:'',
   // graduate fields
   has_grad: false,
   grad_level:'硕士',
@@ -713,6 +726,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .form-container{padding:12px 16px 100px}
 .form-section{background:var(--white);border-radius:12px;padding:16px;margin-bottom:12px}
 .form-section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:6px}
+.form-sub-section-title{font-size:13px;font-weight:700;color:var(--text);margin:16px 0 10px;display:flex;align-items:center;gap:4px}
 .form-section-title .icon{font-size:18px}
 .form-group{margin-bottom:14px}
 .form-group:last-child{margin-bottom:0}
@@ -814,6 +828,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学历信息</span><span class="sect-count" id="ugXlCount">(1)</span></div>
 <div class="info-card" id="ugXlCard" onclick="navToDetail(0)"><div class="info-card-top"><span class="info-card-school" id="xlSchool">--</span><span class="info-card-degree" id="xlDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xlMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xlType">--</span></div></div></div>
   <div class="info-sect"><div class="sect-header"><span class="sect-title">学位信息</span><span class="sect-count" id="ugXwCount">(0)</span></div>
+<div class="info-card" id="ugXwCard" style="display:none"><div class="info-card-top"><span class="info-card-school" id="xwSchool">--</span><span class="info-card-degree" id="xwDegree">--</span></div><div class="info-card-bottom"><span class="info-card-major" id="xwMajor">--</span><span class="info-card-dv"></span><span class="info-card-type" id="xwType">--</span></div></div>
 <div class="empty-card" id="ugXwEmpty"><span class="empty-text">暂无学位信息</span></div></div>
 </div>
 
@@ -935,6 +950,15 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
       <div class="form-group"><label class="form-label">预计毕业日期</label><input class="form-input" id="fLiDate" type="date"></div>
     </div>
     <div class="form-group"><label class="form-label">学籍状态</label><select class="form-select" id="fStatus"><option value="在籍(注册学籍)">在籍(注册学籍)</option><option value="毕业">毕业</option><option value="结业">结业</option><option value="肄业">肄业</option></select></div>
+    <div class="form-sub-section-title">🎓 学位信息 <span style="font-size:11px;color:#999;font-weight:normal">(可选,参考学信网)</span></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学位层次</label><select class="form-select" id="fDegreeLevel"><option value="学士">学士</option><option value="硕士">硕士</option><option value="博士">博士</option></select></div>
+      <div class="form-group"><label class="form-label">学位类别</label><input class="form-input" id="fDegreeCat" placeholder="如:工学学士"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">学位证书编号</label><input class="form-input" id="fDegreeCert" placeholder="学位证书编号"></div>
+      <div class="form-group"><label class="form-label">学位授予日期</label><input class="form-input" id="fDegreeDate" type="date"></div>
+    </div>
     <div class="form-group">
       <label class="form-label">录取照片 (可选)</label>
       <div class="upload-row">
@@ -1465,8 +1489,23 @@ function initPg2() {
     document.getElementById('xlMajor').textContent = '--';
     document.getElementById('xlType').textContent = '--';
   }
-  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
-  document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
+  // 学位信息 - 参考学信网:填写了学位类别/证书编号则显示学位卡片
+  var hasDegree = !!(d.degree_cat || d.degree_cert);
+  var xwCard = document.getElementById('ugXwCard');
+  var xwEmpty = document.getElementById('ugXwEmpty');
+  document.getElementById('ugXwCount').textContent = hasDegree ? '(1)' : '(0)';
+  if (hasDegree) {
+    xwCard.style.display = '';
+    xwEmpty.style.display = 'none';
+    document.getElementById('xwSchool').textContent = d.school || '--';
+    document.getElementById('xwDegree').textContent = (d.degree_level || '学士') + '学位';
+    document.getElementById('xwMajor').textContent = d.major || '--';
+    document.getElementById('xwType').textContent = d.degree_cat || '--';
+  } else {
+    xwCard.style.display = 'none';
+    xwEmpty.style.display = '';
+    xwEmpty.innerHTML = '<span class="empty-text">暂无学位信息</span>';
+  }
 
   // Graduate cards
   var gradBlock = document.getElementById('gradBlock');
@@ -1837,6 +1876,10 @@ function collectFormData() {
   d.li_ri = li.ri;
 
   d.zhuangtai = getVal('fStatus');
+  d.degree_level = getVal('fDegreeLevel');
+  d.degree_cat = getVal('fDegreeCat');
+  d.degree_cert = getVal('fDegreeCert');
+  d.degree_date = getVal('fDegreeDate');
   d.image_a = getVal('fImgA');
   d.image_b = getVal('fImgB');
 
@@ -2522,8 +2565,23 @@ function initPg2() {
     document.getElementById('xlMajor').textContent = '--';
     document.getElementById('xlType').textContent = '--';
   }
-  // 学位信息始终显示"暂无学位信息"(不显示"去填写"链接)
-  document.getElementById('ugXwEmpty').innerHTML = '<span class="empty-text">暂无学位信息</span>';
+  // 学位信息 - 参考学信网:填写了学位类别/证书编号则显示学位卡片
+  var hasDegree = !!(d.degree_cat || d.degree_cert);
+  var xwCard = document.getElementById('ugXwCard');
+  var xwEmpty = document.getElementById('ugXwEmpty');
+  document.getElementById('ugXwCount').textContent = hasDegree ? '(1)' : '(0)';
+  if (hasDegree) {
+    xwCard.style.display = '';
+    xwEmpty.style.display = 'none';
+    document.getElementById('xwSchool').textContent = d.school || '--';
+    document.getElementById('xwDegree').textContent = (d.degree_level || '学士') + '学位';
+    document.getElementById('xwMajor').textContent = d.major || '--';
+    document.getElementById('xwType').textContent = d.degree_cat || '--';
+  } else {
+    xwCard.style.display = 'none';
+    xwEmpty.style.display = '';
+    xwEmpty.innerHTML = '<span class="empty-text">暂无学位信息</span>';
+  }
 
   // Graduate cards
   var gradBlock = document.getElementById('gradBlock');
@@ -2894,6 +2952,10 @@ function collectFormData() {
   d.li_ri = li.ri;
 
   d.zhuangtai = getVal('fStatus');
+  d.degree_level = getVal('fDegreeLevel');
+  d.degree_cat = getVal('fDegreeCat');
+  d.degree_cert = getVal('fDegreeCert');
+  d.degree_date = getVal('fDegreeDate');
   d.image_a = getVal('fImgA');
   d.image_b = getVal('fImgB');
 
