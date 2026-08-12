@@ -321,7 +321,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
 </div>
 
-<div class="main-card" id="detailCard">
+<div class="main-card" id="detailCard" style="display:none">
 <div class="card-top2">
   <div class="photo-row2">
     <div class="photo-item2"><div class="photo-box2" id="admPhotoBox"><img id="admImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
@@ -937,7 +937,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
   <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
 </div>
 
-<div class="main-card" id="detailCard">
+<div class="main-card" id="detailCard" style="display:none">
 <div class="card-top2">
   <div class="photo-row2">
     <div class="photo-item2"><div class="photo-box2" id="admPhotoBox"><img id="admImg" style="display:none" alt=""><div class="photo-ph2"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div><span class="photo-label2">录取照片</span></div>
@@ -1780,9 +1780,10 @@ function initPg3() {
   var isGrad = isMaster || isDoctor;
   var gLevel = isDoctor ? '博士' : (d.grad_level || '硕士');
 
-  // Card style
+  // Card style (pg3 主卡片隐藏:用户要求无紫色框)
   var card = document.getElementById('detailCard');
   card.className = 'main-card';
+  card.style.display = 'none';
   if (isDoctor) {
     card.classList.add('doctor');
   } else if (isMaster) {
@@ -2202,7 +2203,7 @@ function submitAndPreview() {
   DATA = collectFormData();
 
   if (!DATA.school || !DATA.major) {
-    toast('请先填写学校名称和专业名称，否则本科信息无法展示');
+    toast('请先填写学校名称和专业名称,否则本科信息无法展示');
     return;
   }
 
@@ -3005,9 +3006,10 @@ function initPg3() {
   var isGrad = isMaster || isDoctor;
   var gLevel = isDoctor ? '博士' : (d.grad_level || '硕士');
 
-  // Card style
+  // Card style (pg3 主卡片隐藏:用户要求无紫色框)
   var card = document.getElementById('detailCard');
   card.className = 'main-card';
+  card.style.display = 'none';
   if (isDoctor) {
     card.classList.add('doctor');
   } else if (isMaster) {
@@ -3412,7 +3414,7 @@ function submitAndPreview() {
   DATA = collectFormData();
 
   if (!DATA.school || !DATA.major) {
-    toast('请先填写学校名称和专业名称，否则本科信息无法展示');
+    toast('请先填写学校名称和专业名称,否则本科信息无法展示');
     return;
   }
 
