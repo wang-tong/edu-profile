@@ -193,6 +193,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .toggle-section.open .toggle-arrow{transform:rotate(90deg)}
 .toggle-body{display:none}
 .toggle-section.open .toggle-body{display:block;margin-top:12px}
+.toggle-section.doctor .toggle-header{background:linear-gradient(180deg,#f3e5f5,#fff);border:1px solid rgba(156,39,176,.2)}
+.toggle-section.doctor .toggle-title{color:#7b1fa2}
 .grad-type-tabs{display:flex;gap:8px;margin-bottom:14px}
 .grad-type-tab{flex:1;text-align:center;padding:10px 0;border-radius:8px;border:1.5px solid #ddd;font-size:13px;cursor:pointer;color:var(--text-gray);transition:all .2s}
 .grad-type-tab.active{border-color:var(--blue);color:var(--blue);background:#f0f4ff}
@@ -491,14 +493,27 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
             <button type="button" class="upload-btn" onclick="document.getElementById('fGImgB_file').click()">📷</button>
           </div>
         </div>
-        <div class="form-sub-section-title" style="margin-top:18px">🧑‍🎓 博士研究生 <span style="font-size:11px;color:#999;font-weight:normal">(可选,可与硕士同时填写)</span></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- 博士研究生信息(可选) -->
+  <div class="toggle-section doctor" id="toggleGrad2">
+    <div class="toggle-header" onclick="toggleGrad2Section()">
+      <div class="toggle-header-left">
+        <span class="toggle-title">🎓 博士研究生信息 (可选)</span>
+        <span class="toggle-hint">点击展开填写</span>
+      </div>
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-body">
+      <div class="form-section" style="margin-bottom:0">
         <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fG2School" placeholder="请输入博士学校名称"></div>
         <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fG2Major" placeholder="请输入博士专业名称"></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">学位类型</label><select class="form-select" id="fG2DegreeType"><option value="学术型">学术型</option><option value="专业型">专业型</option></select></div>
           <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fG2EduSys"><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="5">5</option></select></div>
         </div>
-        <div class="form-sub-section-title" style="margin-top:18px">🎓 博士学位信息 <span style="font-size:11px;color:#999;font-weight:normal">(可选,参考学信网)</span></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">学位证书编号</label><input class="form-input" id="fG2DegreeCert" placeholder="学位证书编号"></div>
           <div class="form-group"><label class="form-label">学位授予日期</label><input class="form-input" id="fG2DegreeDate" type="date"></div>
@@ -534,6 +549,11 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
             <button type="button" class="upload-btn" onclick="document.getElementById('fG2ImgB_file').click()">📷</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  
       </div>
     </div>
   </div>
@@ -816,6 +836,8 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 .toggle-section.open .toggle-arrow{transform:rotate(90deg)}
 .toggle-body{display:none}
 .toggle-section.open .toggle-body{display:block;margin-top:12px}
+.toggle-section.doctor .toggle-header{background:linear-gradient(180deg,#f3e5f5,#fff);border:1px solid rgba(156,39,176,.2)}
+.toggle-section.doctor .toggle-title{color:#7b1fa2}
 .grad-type-tabs{display:flex;gap:8px;margin-bottom:14px}
 .grad-type-tab{flex:1;text-align:center;padding:10px 0;border-radius:8px;border:1.5px solid #ddd;font-size:13px;cursor:pointer;color:var(--text-gray);transition:all .2s}
 .grad-type-tab.active{border-color:var(--blue);color:var(--blue);background:#f0f4ff}
@@ -1114,14 +1136,27 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
             <button type="button" class="upload-btn" onclick="document.getElementById('fGImgB_file').click()">📷</button>
           </div>
         </div>
-        <div class="form-sub-section-title" style="margin-top:18px">🧑‍🎓 博士研究生 <span style="font-size:11px;color:#999;font-weight:normal">(可选,可与硕士同时填写)</span></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- 博士研究生信息(可选) -->
+  <div class="toggle-section doctor" id="toggleGrad2">
+    <div class="toggle-header" onclick="toggleGrad2Section()">
+      <div class="toggle-header-left">
+        <span class="toggle-title">🎓 博士研究生信息 (可选)</span>
+        <span class="toggle-hint">点击展开填写</span>
+      </div>
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-body">
+      <div class="form-section" style="margin-bottom:0">
         <div class="form-group"><label class="form-label">学校名称</label><input class="form-input" id="fG2School" placeholder="请输入博士学校名称"></div>
         <div class="form-group"><label class="form-label">专业名称</label><input class="form-input" id="fG2Major" placeholder="请输入博士专业名称"></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">学位类型</label><select class="form-select" id="fG2DegreeType"><option value="学术型">学术型</option><option value="专业型">专业型</option></select></div>
           <div class="form-group"><label class="form-label">学制(年)</label><select class="form-select" id="fG2EduSys"><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="5">5</option></select></div>
         </div>
-        <div class="form-sub-section-title" style="margin-top:18px">🎓 博士学位信息 <span style="font-size:11px;color:#999;font-weight:normal">(可选,参考学信网)</span></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">学位证书编号</label><input class="form-input" id="fG2DegreeCert" placeholder="学位证书编号"></div>
           <div class="form-group"><label class="form-label">学位授予日期</label><input class="form-input" id="fG2DegreeDate" type="date"></div>
@@ -1157,6 +1192,11 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
             <button type="button" class="upload-btn" onclick="document.getElementById('fG2ImgB_file').click()">📷</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  
       </div>
     </div>
   </div>
@@ -2061,6 +2101,9 @@ function getVal(id) {
 
 function toggleGradSection() {
   document.getElementById('toggleGrad').classList.toggle('open');
+}
+function toggleGrad2Section() {
+  document.getElementById('toggleGrad2').classList.toggle('open');
 }
 
 var currentGradType = '硕士';
@@ -3294,6 +3337,9 @@ function getVal(id) {
 
 function toggleGradSection() {
   document.getElementById('toggleGrad').classList.toggle('open');
+}
+function toggleGrad2Section() {
+  document.getElementById('toggleGrad2').classList.toggle('open');
 }
 
 var currentGradType = '硕士';
