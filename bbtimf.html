@@ -313,7 +313,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 <span class="nb-title">学籍信息</span>
 </div></nav><div class="nb-ph" id="nbPh3"></div>
 
-<div class="level-tabs" id="levelTabs">
+<div class="level-tabs" id="levelTabs" style="display:none">
   <div class="level-tab active" data-idx="0" id="ugLevelTab">本科</div>
   <div class="level-tab" data-idx="1" id="gradTab" style="display:none">硕士</div>
   <div class="level-tab" data-idx="2" id="gradTab2" style="display:none">博士</div>
@@ -1235,6 +1235,9 @@ function initPg3() {
   var isDoctor = (detailLevel === 2 && hasGrad2);
   var isGrad = isMaster || isDoctor;
   var gLevel = isDoctor ? '博士' : (d.grad_level || '硕士');
+
+  // 屏蔽pg3顶部Tab栏(用户要求保留导航栏、紫色主卡片、字段列表)
+  document.getElementById('levelTabs').style.display = 'none';
 
   // Card style
   var card = document.getElementById('detailCard');
