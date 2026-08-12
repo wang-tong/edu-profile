@@ -1110,7 +1110,7 @@ function initPg2() {
     gradTab.textContent = '硕士';
     var gradTabB = document.getElementById('gradTab2');
     if (gradTabB) {
-      gradTabB.style.display = (d.has_grad2 && d.grad2_school && d.grad2_major) ? '' : 'none';
+      gradTabB.style.display = 'none'; // 博士仅在pg2列表显示,pg3不切换博士
       gradTabB.textContent = '博士';
     }
   } else {
@@ -1170,7 +1170,7 @@ function initPg3() {
   gradTab.textContent = '硕士';
   var gradTabB = document.getElementById('gradTab2');
   if (gradTabB) {
-    gradTabB.style.display = hasGrad2 ? '' : 'none';
+    gradTabB.style.display = 'none'; // 博士仅在pg2列表显示,pg3不切换博士
     gradTabB.textContent = '博士';
   }
 
