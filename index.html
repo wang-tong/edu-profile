@@ -310,7 +310,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
 <!-- ============ PAGE 3: 学籍详情 ============ -->
 <div class="page pg3" id="pg3">
-<nav class="nb" style="display:none"><div class="nb-spacer" id="nbSp3"></div><div class="nb-main">
+<nav class="nb"><div class="nb-spacer" id="nbSp3"></div><div class="nb-main">
 <div class="nb-back" onclick="backTo('pg2')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
 <span class="nb-title">学籍信息</span>
 </div></nav><div class="nb-ph" id="nbPh3"></div>
@@ -926,7 +926,7 @@ body{max-width:450px;margin:0 auto;position:relative;min-height:100vh}
 
 <!-- ============ PAGE 3: 学籍详情 ============ -->
 <div class="page pg3" id="pg3">
-<nav class="nb" style="display:none"><div class="nb-spacer" id="nbSp3"></div><div class="nb-main">
+<nav class="nb"><div class="nb-spacer" id="nbSp3"></div><div class="nb-main">
 <div class="nb-back" onclick="backTo('pg2')"><svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
 <span class="nb-title">学籍信息</span>
 </div></nav><div class="nb-ph" id="nbPh3"></div>
@@ -1780,10 +1780,7 @@ function initPg3() {
   var isGrad = isMaster || isDoctor;
   var gLevel = isDoctor ? '博士' : (d.grad_level || '硕士');
 
-  // 屏蔽pg3顶部2个框:导航栏、Tab栏(用户要求保留紫色主卡片+字段列表)
-  var nb3 = document.getElementById('pg3').querySelector('nav.nb');
-  if (nb3) nb3.style.display = 'none';
-  document.getElementById('nbPh3').style.display = 'none';
+  // 屏蔽pg3顶部Tab栏(用户要求保留导航栏、紫色主卡片、字段列表)
   document.getElementById('levelTabs').style.display = 'none';
 
   // 主卡片 detailCard 显示(用户确认要保留)
@@ -3012,10 +3009,7 @@ function initPg3() {
   var isGrad = isMaster || isDoctor;
   var gLevel = isDoctor ? '博士' : (d.grad_level || '硕士');
 
-  // 屏蔽pg3顶部2个框:导航栏、Tab栏(用户要求保留紫色主卡片+字段列表)
-  var nb3 = document.getElementById('pg3').querySelector('nav.nb');
-  if (nb3) nb3.style.display = 'none';
-  document.getElementById('nbPh3').style.display = 'none';
+  // 屏蔽pg3顶部Tab栏(用户要求保留导航栏、紫色主卡片、字段列表)
   document.getElementById('levelTabs').style.display = 'none';
 
   // 主卡片 detailCard 显示(用户确认要保留)
