@@ -1060,7 +1060,7 @@ function initPg2() {
     document.getElementById('xlType').textContent = '--';
   }
   // 学位信息 - 参考学信网:填写了学位类别/证书编号则显示学位卡片
-  var hasDegree = !!(d.degree_cat || d.degree_cert);
+  var hasDegree = !!(d.degree_cat || d.degree_cert || d.academic_qualification === '本科' || d.academic_qualification === '专升本');
   var xwCard = document.getElementById('ugXwCard');
   var xwEmpty = document.getElementById('ugXwEmpty');
   document.getElementById('ugXwCount').textContent = hasDegree ? '(1)' : '(0)';
