@@ -1147,7 +1147,7 @@ function initPg2() {
   // 博士研究生区块(可与硕士同时显示)
   var grad2Block = document.getElementById('grad2Block');
   if (d.has_grad2 && d.grad2_school && d.grad2_major) {
-    grad2Block.style.display = '';
+    // grad2Block.style.display = ''; // 用户要求:博士展示和本/硕一致,隐藏博士三卡片(博士研究生教育区块始终隐藏)
     document.getElementById('grad2BlockTitle').textContent = '博士研究生教育';
     document.getElementById('grad2BlockBadge').textContent = '博士';
     document.getElementById('grad2BlockBadge').className = 'edu-block-badge doctor';
